@@ -1,5 +1,6 @@
 package com.eventvista.event_vista.controller;
 
+import com.eventvista.event_vista.exception.EventNotFoundException;
 import com.eventvista.event_vista.model.Event;
 import com.eventvista.event_vista.model.User;
 import com.eventvista.event_vista.model.dto.UpcomingEventDTO;
@@ -24,89 +25,222 @@ public class EventController {
         this.authUtil = authUtil;
     }
 
-    // Get all events for the current user
+    // Get all events for the current authenticated user
+    // Returns ResponseEntity containing:
+    // List of events if found - 200 Ok - may be empty if no events exits
+    // Specific error 500 message if something goes wrong
     @GetMapping("/all")
-    public ResponseEntity<List<Event>> getAllEvents() {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.ok(eventService.findAllEvents(user));
-    }
-
-    @GetMapping("/find/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable("id") Integer id) {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.of(eventService.findEventById(id, user));
-    }
-
-    @GetMapping("/find/name/{name}")
-    public ResponseEntity<Event> getEventByName(@PathVariable("name") String name) {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.of(eventService.findEventByName(name, user));
-    }
-
-    @GetMapping("/find/venue/{venueId}")
-    public ResponseEntity<List<Event>> getEventsByVenue(@PathVariable("venueId") Integer venueId) {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.ok(eventService.findEventsByVenue(venueId, user));
-    }
-
-    @GetMapping("/find/client/{clientId}")
-    public ResponseEntity<List<Event>> getEventsByClient(@PathVariable("clientId") Integer clientId) {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.ok(eventService.findEventsByClient(clientId, user));
-    }
-
-    @GetMapping("/find/vendor/{vendorId}")
-    public ResponseEntity<List<Event>> getEventsByVendor(@PathVariable("vendorId") Integer vendorId) {
-        User user = authUtil.getUserFromAuthentication();
-        return ResponseEntity.ok(eventService.findEventsByVendor(vendorId, user));
-    }
-
-    @PostMapping("/add")
-    public ResponseEntity<Event> addEvent(@RequestBody Event event) {
-        User user = authUtil.getUserFromAuthentication();
-        Event savedEvent = eventService.addEvent(event, user);
-        return ResponseEntity.ok(savedEvent);
-    }
-
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable("id") Integer id, @RequestBody Event event) {
-        User user = authUtil.getUserFromAuthentication();
+    public ResponseEntity<?> getAllEvents() {
         try {
-            return ResponseEntity.ok(eventService.updateEvent(id, event, user));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            User user = authUtil.getUserFromAuthentication();
+            List<Event> events = eventService.findAllEvents(user);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteEvent(@PathVariable("id") Integer id) {
-        User user = authUtil.getUserFromAuthentication();
-        boolean deleted = eventService.deleteEvent(id, user);
-        return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    // Get a specific event by its ID for the current authenticated user
+    // Returns ResponseEntity containing:
+    // The event if found - 200 OK
+    // 404 Not Found if event does not exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @GetMapping("/find/{id}")
+    public ResponseEntity<?> getEventById(@PathVariable("id") Integer id) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            Event event = eventService.findEventById(id, user);
+            return ResponseEntity.ok(event);
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
+    // Get a specific event by its name for the current authenticated user
+    // Returns ResponseEntity containing:
+    // The event if found - 200 OK
+    // 404 Not Found if event does not exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @GetMapping("/find/name/{name}")
+    public ResponseEntity<?> getEventByName(@PathVariable("name") String name) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            Event event = eventService.findEventByName(name, user);
+            return ResponseEntity.ok(event);
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Get all events associated with a specific venue for the current authenticated user
+    // Returns ResponseEntity containing:
+    // List of events if found - 200 OK - may be empty if no events exist for the venue
+    // 404 Not Found if the venue doesn't exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @GetMapping("/find/venue/{venueId}")
+    public ResponseEntity<?> getEventsByVenue(@PathVariable("venueId") Integer venueId) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            List<Event> events = eventService.findEventsByVenue(venueId, user);
+            if (events == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events by venue: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Get all events associated with a specific client for the current authenticated user
+    // Returns ResponseEntity containing:
+    // List of events if found - 200 OK - may be empty if no events exist for the client
+    // 404 Not Found if the client doesn't exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @GetMapping("/find/client/{clientId}")
+    public ResponseEntity<?> getEventsByClient(@PathVariable("clientId") Integer clientId) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            List<Event> events = eventService.findEventsByClient(clientId, user);
+            if (events == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events by client: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Get all events associated with a specific vendor for the current authenticated user
+    // Returns ResponseEntity containing:
+    // List of events if found - 200 OK - may be empty if no events exist for the vendor
+    // 404 Not Found if the vendor doesn't exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @GetMapping("/find/vendor/{vendorId}")
+    public ResponseEntity<?> getEventsByVendor(@PathVariable("vendorId") Integer vendorId) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            List<Event> events = eventService.findEventsByVendor(vendorId, user);
+            if (events == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events by vendor: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Create a new event for the current authenticated user
+    // Returns ResponseEntity containing:
+    // The created event if successful - 200 OK
+    // Error message 400 Bad Request if event data is invalid
+    // Specific error 500 message if something goes wrong
+    @PostMapping("/add")
+    public ResponseEntity<?> addEvent(@RequestBody Event event) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            Event savedEvent = eventService.addEvent(event, user);
+            return ResponseEntity.ok(savedEvent);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Invalid event data: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error creating event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Update an existing event for the current authenticated user
+    // Returns ResponseEntity containing:
+    // The updated event if successful - 200 OK
+    // Error message 404 Not Found if the event doesn't exist (no response body)
+    // Specific error 500 message if something goes wrong
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateEvent(@PathVariable("id") Integer id, @RequestBody Event event) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            return ResponseEntity.ok(eventService.updateEvent(id, event, user));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error updating event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Deletes an event for the current authenticated user
+    // Returns ResponseEntity containing:
+    // 200 OK if successful (no response body)
+    // 404 Not Found if the event does not exist
+    // Specific error 500 message if something else goes wrong
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteEvent(@PathVariable("id") Integer id) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            eventService.deleteEvent(id, user);
+            return ResponseEntity.ok().build();
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error deleting event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Retrieves upcoming events with weather info for the current authenticated user
+    // Returns ResponseEntity containing:
+    // List of upcoming events with weather data if successful - 200 OK - may be empty if no upcoming events exits
+    // Specific error 500 message if something else goes wrong
     @GetMapping("/upcoming-events")
-    public ResponseEntity<List<UpcomingEventDTO>> getUpcomingEvents() {
+    public ResponseEntity<?> getUpcomingEvents() {
         try {
             User user = authUtil.getUserFromAuthentication();
             List<UpcomingEventDTO> events = eventService.findUpcomingEventsWithWeather(user);
             return ResponseEntity.ok(events);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving upcoming events: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 
+    // Rebook an existing event with new details for the current authenticated user
+    // Returns ResponseEntity containing:
+    // The rebooked event if successful - 200 OK
+    // 404 Not Found if the event does not exist (no response body)
+    // Error message 400 Bad Request if rebooking data is invalid
+    // Specific error 500 message if something else goes wrong
     @PostMapping("/rebook/{id}")
     public ResponseEntity<?> rebookEvent(@PathVariable("id") Integer id, @RequestBody Event newEventDetails) {
-        User user = authUtil.getUserFromAuthentication();
         try {
-            return eventService.rebookEvent(id, newEventDetails, user)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (RuntimeException e) {
+            User user = authUtil.getUserFromAuthentication();
+            Event rebookedEvent = eventService.rebookEvent(id, newEventDetails, user);
+            return ResponseEntity.ok(rebookedEvent);
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            response.put("message", "Error rebooking event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 }

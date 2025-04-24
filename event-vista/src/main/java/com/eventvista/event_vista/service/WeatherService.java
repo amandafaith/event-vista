@@ -1,10 +1,10 @@
 package com.eventvista.event_vista.service;
 
+import com.eventvista.event_vista.exception.WeatherServiceException;
 import com.eventvista.event_vista.model.dto.WeatherData;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,79 +33,95 @@ public class WeatherService {
 
     public WeatherData getWeatherData(String location, LocalDate eventDate) {
         try {
-            // Validate inputs
-            if (!StringUtils.hasText(location)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location cannot be empty");
-            }
-
-            if (eventDate == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date cannot be null");
-            }
+            validateInputs(location, eventDate);
+            validateApiKey();
 
             LocalDate today = LocalDate.now();
             long daysBetween = ChronoUnit.DAYS.between(today, eventDate);
 
-            // If event is today, use current weather
-            if (daysBetween == 0) {
-                return getCurrentWeather(location);
+            if (daysBetween < 0) {
+                throw new WeatherServiceException("Cannot get weather for past dates");
             }
-            // If event is within 5 days, use forecast
-            else if (daysBetween > 0 && daysBetween <= 5) {
-                return getForecastWeather(location, eventDate);
+            if (daysBetween > 5) {
+                throw new WeatherServiceException("Weather forecast is only available for up to 5 days in advance");
             }
-            // If event is more than 5 days away, return null
-            else {
-                return null;
-            }
-        } catch (ResponseStatusException e) {
+
+            return daysBetween == 0 ?
+                    getCurrentWeather(location) :
+                    getForecastWeather(location, eventDate);
+        } catch (WeatherServiceException e) {
             throw e;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error fetching weather data: " + e.getMessage());
+            throw new WeatherServiceException("Error fetching weather data: " + e.getMessage(), e);
         }
     }
 
-    private WeatherData getCurrentWeather(String location) throws Exception {
-        String url = String.format("%s/data/2.5/weather?q=%s&appid=%s&units=imperial", weatherApiUrl, location, apiKey);
-        String response = restTemplate.getForObject(url, String.class);
-        JsonNode root = objectMapper.readTree(response);
-
-        return extractWeatherData(root);
+    private void validateInputs(String location, LocalDate eventDate) {
+        if (!StringUtils.hasText(location)) {
+            throw new WeatherServiceException("Location cannot be empty");
+        }
+        if (eventDate == null) {
+            throw new WeatherServiceException("Date cannot be null");
+        }
     }
 
-    private WeatherData getForecastWeather(String location, LocalDate targetDate) throws Exception {
-        String url = String.format("%s/data/2.5/forecast?q=%s&appid=%s&units=imperial", weatherApiUrl, location, apiKey);
-        String response = restTemplate.getForObject(url, String.class);
-        JsonNode root = objectMapper.readTree(response);
-        JsonNode list = root.path("list");
+    private void validateApiKey() {
+        if (!StringUtils.hasText(apiKey)) {
+            throw new WeatherServiceException("Weather API key is not configured");
+        }
+    }
 
-        // Format for comparing dates from the API response
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String targetDateStr = targetDate.toString();
+    private WeatherData getCurrentWeather(String location) {
+        try {
+            String url = String.format("%s/data/2.5/weather?q=%s&appid=%s&units=imperial",
+                    weatherApiUrl, location, apiKey);
+            String response = restTemplate.getForObject(url, String.class);
+            JsonNode root = objectMapper.readTree(response);
+            return extractWeatherData(root);
+        } catch (RestClientException e) {
+            throw new WeatherServiceException("Failed to fetch current weather: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new WeatherServiceException("Error processing current weather data: " + e.getMessage(), e);
+        }
+    }
 
-        // Find the forecast closest to the target date
-        for (JsonNode forecast : list) {
-            String dtTxt = forecast.path("dt_txt").asText();
-            LocalDateTime forecastDateTime = LocalDateTime.parse(dtTxt, formatter);
+    private WeatherData getForecastWeather(String location, LocalDate targetDate) {
+        try {
+            String url = String.format("%s/data/2.5/forecast?q=%s&appid=%s&units=imperial",
+                    weatherApiUrl, location, apiKey);
+            String response = restTemplate.getForObject(url, String.class);
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode list = root.path("list");
 
-            if (forecastDateTime.toLocalDate().equals(targetDate)) {
-                return extractWeatherData(forecast);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String targetDateStr = targetDate.toString();
+
+            for (JsonNode forecast : list) {
+                String dtTxt = forecast.path("dt_txt").asText();
+                LocalDateTime forecastDateTime = LocalDateTime.parse(dtTxt, formatter);
+
+                if (forecastDateTime.toLocalDate().equals(targetDate)) {
+                    return extractWeatherData(forecast);
+                }
             }
-        }
 
-        // If no exact match found, return null
-        return null;
+            throw new WeatherServiceException("No forecast available for the specified date");
+        } catch (RestClientException e) {
+            throw new WeatherServiceException("Failed to fetch forecast: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new WeatherServiceException("Error processing forecast data: " + e.getMessage(), e);
+        }
     }
 
     private WeatherData extractWeatherData(JsonNode weatherNode) {
-        String icon = weatherNode.path("weather").get(0).path("icon").asText();
-        double temp = weatherNode.path("main").path("temp").asDouble();
-        String description = weatherNode.path("weather").get(0).path("description").asText();
+        try {
+            String icon = weatherNode.path("weather").get(0).path("icon").asText();
+            double temp = weatherNode.path("main").path("temp").asDouble();
+            String description = weatherNode.path("weather").get(0).path("description").asText();
 
-        return new WeatherData(
-                icon,
-                String.format("%.1f°F", temp),
-                description
-        );
+            return new WeatherData(icon, String.format("%.1f°F", temp), description);
+        } catch (Exception e) {
+            throw new WeatherServiceException("Error extracting weather data from API response: " + e.getMessage(), e);
+        }
     }
 }

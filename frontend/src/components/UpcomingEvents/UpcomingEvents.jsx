@@ -43,25 +43,19 @@ const UpcomingEvents = ({ events = [] }) => {
 
   useEffect(() => {
     if (events.length > 0) {
-      console.log("Initial events:", events);
-
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      const fiveDaysFromNow = new Date();
+      fiveDaysFromNow.setDate(today.getDate() + 5);
+      fiveDaysFromNow.setHours(23, 59, 59, 999);
 
       const upcoming = events
         .filter((event) => {
           const eventDate = new Date(event.date + "T00:00:00");
-          console.log("Event date comparison:", {
-            event: event.name,
-            date: event.date,
-            parsedDate: eventDate,
-            isUpcoming: eventDate >= today,
-          });
-          return eventDate >= today;
+          return eventDate >= today && eventDate <= fiveDaysFromNow;
         })
         .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      console.log("Filtered upcoming events:", upcoming);
 
       const fetchWeatherData = async () => {
         setLoading(true);
@@ -75,12 +69,6 @@ const UpcomingEvents = ({ events = [] }) => {
             upcoming.map(async (event) => {
               if (event.venue && event.venue.location) {
                 try {
-                  console.log("Fetching weather for:", {
-                    event: event.name,
-                    location: event.venue.location,
-                    date: event.date,
-                  });
-
                   const response = await axios.get(
                     "http://localhost:8080/api/weather",
                     {
@@ -93,11 +81,6 @@ const UpcomingEvents = ({ events = [] }) => {
                       },
                     }
                   );
-
-                  console.log("Weather response:", {
-                    event: event.name,
-                    weatherData: response.data,
-                  });
 
                   if (response.data.available === false) {
                     return {
@@ -115,7 +98,7 @@ const UpcomingEvents = ({ events = [] }) => {
                     temperature: response.data.temperature,
                   };
                 } catch (weatherError) {
-                  console.error(
+                  console.warn(
                     `Weather fetch failed for ${event.venue.location}:`,
                     weatherError
                   );
@@ -131,7 +114,6 @@ const UpcomingEvents = ({ events = [] }) => {
             })
           );
 
-          console.log("Final events with weather:", eventsWithWeather);
           setUpcomingEvents(eventsWithWeather);
         } catch (err) {
           console.error("Error in fetchWeatherData:", err);
@@ -161,13 +143,13 @@ const UpcomingEvents = ({ events = [] }) => {
   if (upcomingEvents.length === 0)
     return (
       <div className={`${styles.upcomingEvents} ${styles.empty}`}>
-        No upcoming events
+        No upcoming events in the next 5 days
       </div>
     );
 
   return (
     <div className={styles.upcomingEvents}>
-      <h2>Upcoming Events</h2>
+      <h2>Upcoming Events (Next 5 Days)</h2>
       <div className={styles.eventsList}>
         {upcomingEvents.map((event) => (
           <div key={event.id} className={styles.eventCard}>
