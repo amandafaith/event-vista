@@ -1,12 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Calendar.module.css";
 import EventActionsModal from "../../components/EventActionsModal/EventActionsModal";
+import { eventApi } from "../../services/api";
 
-const Calendar = ({ events = [], onEventUpdated }) => {
+const Calendar = ({ onEventUpdated }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [eventsByDate, setEventsByDate] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEventsForMonth = async () => {
+      // Only show loading if we don't have any events for the current month
+      const currentMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+      const hasEventsForMonth = Object.keys(eventsByDate).some((date) =>
+        date.startsWith(currentMonthKey)
+      );
+
+      if (!hasEventsForMonth) {
+        setLoading(true);
+      }
+
+      try {
+        const firstDay = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1
+        );
+        const lastDay = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() + 1,
+          0
+        );
+
+        const response = await eventApi.getEventsByDateRange(
+          firstDay.toISOString().split("T")[0],
+          lastDay.toISOString().split("T")[0]
+        );
+
+        // Create a new eventsByDate object without the current month's events
+        const newEventsByDate = Object.keys(eventsByDate).reduce(
+          (acc, date) => {
+            if (!date.startsWith(currentMonthKey)) {
+              acc[date] = eventsByDate[date];
+            }
+            return acc;
+          },
+          {}
+        );
+
+        // Add the new events
+        response.data.forEach((event) => {
+          const dateStr = event.date;
+          if (!newEventsByDate[dateStr]) {
+            newEventsByDate[dateStr] = [];
+          }
+          // Check if the event is already in the array
+          const isDuplicate = newEventsByDate[dateStr].some(
+            (e) => e.id === event.id
+          );
+          if (!isDuplicate) {
+            newEventsByDate[dateStr].push(event);
+          }
+        });
+
+        setEventsByDate(newEventsByDate);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEventsForMonth();
+  }, [currentDate]);
 
   const formatTime = (timeStr) => {
     if (!timeStr) return "";
@@ -30,40 +99,8 @@ const Calendar = ({ events = [], onEventUpdated }) => {
   };
 
   const getEventsForDate = (date) => {
-    console.log("Processing events for date:", date);
-    console.log("All events:", events);
-
-    return events.filter((event) => {
-      try {
-        console.log("Processing event:", event);
-        console.log("Event date:", event.date);
-        console.log("Event time:", event.time);
-
-        // The date is already in YYYY-MM-DD format from the backend
-        const eventDate = new Date(event.date);
-
-        // Check if the date is valid
-        if (isNaN(eventDate.getTime())) {
-          console.warn(`Invalid date for event ${event.id}: ${event.date}`);
-          return false;
-        }
-
-        // Format both dates to YYYY-MM-DD for comparison
-        const eventDateStr = event.date; // Already in YYYY-MM-DD format
-        const compareDateStr = date.toISOString().split("T")[0];
-
-        console.log("Comparing dates:", {
-          eventDateStr,
-          compareDateStr,
-          matches: eventDateStr === compareDateStr,
-        });
-
-        return eventDateStr === compareDateStr;
-      } catch (error) {
-        console.error(`Error processing event ${event.id}:`, error);
-        return false;
-      }
-    });
+    const dateStr = date.toISOString().split("T")[0];
+    return eventsByDate[dateStr] || [];
   };
 
   const handlePrevious = () => {
@@ -362,37 +399,6 @@ const Calendar = ({ events = [], onEventUpdated }) => {
     }
   };
 
-  const renderEvents = () => {
-    if (!events || events.length === 0) return null;
-
-    return events.map((event) => {
-      console.log("Event data:", event);
-      console.log("Date:", event.date);
-      console.log("Time:", event.time);
-
-      // The time is already in HH:mm format from the backend
-      const timeStr = event.time;
-
-      return (
-        <div
-          key={event.id}
-          className={`calendar-event ${
-            viewMode === "week" ? "week-event" : ""
-          }`}
-        >
-          <span className="event-time">{timeStr}</span>
-          <span className="event-name">{event.name}</span>
-          {event.venue && (
-            <span className="event-venue">
-              <i className="fas fa-map-marker-alt"></i>
-              {event.venue.name}
-            </span>
-          )}
-        </div>
-      );
-    });
-  };
-
   return (
     <div className={styles.calendar}>
       <div className={styles.header}>
@@ -422,6 +428,11 @@ const Calendar = ({ events = [], onEventUpdated }) => {
           </button>
         </div>
       </div>
+      {loading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingSpinner}></div>
+        </div>
+      )}
       {viewMode === "month" && renderMonthView()}
       {viewMode === "week" && renderWeekView()}
       {viewMode === "day" && renderDayView()}

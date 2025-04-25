@@ -9,6 +9,7 @@ import com.eventvista.event_vista.utilities.AuthUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.*;
 
 
@@ -240,6 +241,41 @@ public class EventController {
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Error rebooking event: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    // Retrieves all events for a specific date for the authenticated user
+    // Returns ResponseEntity containing:
+    // List of events if found - 200 OK - may be empty if no events exist for date
+    // Specific error 500 message if something else goes wrong
+    @GetMapping("/by-date/{date}")
+    public ResponseEntity<?> getEventsByDate(@PathVariable("date") String date) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            LocalDate localDate = LocalDate.parse(date);
+            List<Event> events = eventService.findEventsByDate(localDate, user);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events by date: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @GetMapping("/by-date-range")
+    public ResponseEntity<?> getEventsByDateRange(
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate) {
+        try {
+            User user = authUtil.getUserFromAuthentication();
+            LocalDate startLocalDate = LocalDate.parse(startDate);
+            LocalDate endLocalDate = LocalDate.parse(endDate);
+            List<Event> events = eventService.findEventsByDateRange(startLocalDate, endLocalDate, user);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Error retrieving events by date range: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

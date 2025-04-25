@@ -79,6 +79,11 @@ export const eventApi = {
   rebookEvent: (id, rebookData) =>
     axiosInstance.post(`/api/events/rebook/${id}`, rebookData),
    getUpcomingEvents: () => axiosInstance.get("/api/events/upcoming-events"),
+     getEventsByDate: (date) => axiosInstance.get(`/api/events/by-date/${date}`),
+       getEventsByDateRange: (startDate, endDate) =>
+         axiosInstance.get(`/api/events/by-date-range`, {
+           params: { startDate, endDate },
+         }),
 };
 
 export const weatherApi = {

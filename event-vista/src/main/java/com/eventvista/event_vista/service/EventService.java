@@ -242,6 +242,18 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
                 .collect(Collectors.toList());
     }
 
+    // Retrieves all events for a specific date
+    // Returns list of events for the date, may be empty if no events exist
+    public List<Event> findEventsByDate(LocalDate date, User user) {
+        return eventRepository.findByDateBetweenAndUser(date, date, user);
+    }
+
+    // Retrives all events for a specific date range
+    // Returns list of events within the date range, may be empty if no events exist
+    public List<Event> findEventsByDateRange(LocalDate startDate, LocalDate endDate, User user) {
+        return eventRepository.findByDateBetweenAndUser(startDate, endDate, user);
+    }
+
 
     // Validates the event data before saving or updating.
     // Throws InvalidEventDataException if any required field is missing or invalid
