@@ -78,6 +78,17 @@ export const eventApi = {
   deleteEvent: (id) => axiosInstance.delete(`/api/events/delete/${id}`),
   rebookEvent: (id, rebookData) =>
     axiosInstance.post(`/api/events/rebook/${id}`, rebookData),
+   getUpcomingEvents: () => axiosInstance.get("/api/events/upcoming-events"),
+};
+
+export const weatherApi = {
+  getWeather: (location, date) =>
+    axiosInstance.get("/api/weather", {
+      params: {
+        location,
+        date,
+      },
+    }),
 };
 
 export const vendorApi = {

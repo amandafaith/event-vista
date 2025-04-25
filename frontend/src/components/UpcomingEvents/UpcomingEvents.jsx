@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { eventApi } from "../../services/api";
 import styles from "./UpcomingEvents.module.css";
 
 const getWeatherEmoji = (icon) => {
@@ -36,99 +36,27 @@ const formatDate = (dateString) => {
   });
 };
 
-const UpcomingEvents = ({ events = [] }) => {
+const UpcomingEvents = ({ refreshTrigger }) => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (events.length > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const fiveDaysFromNow = new Date();
-      fiveDaysFromNow.setDate(today.getDate() + 5);
-      fiveDaysFromNow.setHours(23, 59, 59, 999);
-
-      const upcoming = events
-        .filter((event) => {
-          const eventDate = new Date(event.date + "T00:00:00");
-          return eventDate >= today && eventDate <= fiveDaysFromNow;
-        })
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      const fetchWeatherData = async () => {
+    const fetchUpcomingEvents = async () => {
+      try {
         setLoading(true);
-        try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            throw new Error("No authentication token found");
-          }
+        const response = await eventApi.getUpcomingEvents();
+        setUpcomingEvents(response.data);
+      } catch (err) {
+        console.error("Error fetching upcoming events:", err);
+        setError(err.message || "Failed to fetch upcoming events");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-          const eventsWithWeather = await Promise.all(
-            upcoming.map(async (event) => {
-              if (event.venue && event.venue.location) {
-                try {
-                  const response = await axios.get(
-                    "http://localhost:8080/api/weather",
-                    {
-                      params: {
-                        location: event.venue.location,
-                        date: event.date,
-                      },
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
-                    }
-                  );
-
-                  if (response.data.available === false) {
-                    return {
-                      ...event,
-                      weatherIcon: null,
-                      weatherDescription: "Weather data not available",
-                      temperature: "N/A",
-                    };
-                  }
-
-                  return {
-                    ...event,
-                    weatherIcon: response.data.icon,
-                    weatherDescription: response.data.description,
-                    temperature: response.data.temperature,
-                  };
-                } catch (weatherError) {
-                  console.warn(
-                    `Weather fetch failed for ${event.venue.location}:`,
-                    weatherError
-                  );
-                  return {
-                    ...event,
-                    weatherIcon: null,
-                    weatherDescription: "Weather data not available",
-                    temperature: "N/A",
-                  };
-                }
-              }
-              return event;
-            })
-          );
-
-          setUpcomingEvents(eventsWithWeather);
-        } catch (err) {
-          console.error("Error in fetchWeatherData:", err);
-          setError(
-            "Failed to fetch weather data: " + (err.message || "Unknown error")
-          );
-          setUpcomingEvents(upcoming);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchWeatherData();
-    }
-  }, [events]);
+    fetchUpcomingEvents();
+  }, [refreshTrigger]);
 
   if (loading)
     return (
@@ -156,24 +84,24 @@ const UpcomingEvents = ({ events = [] }) => {
             <div className={styles.eventDate}>📅 {formatDate(event.date)}</div>
             <div className={styles.eventName}>{event.name}</div>
             <div className={styles.eventLocation}>
-              📍 {event.venue ? event.venue.name : "No venue set"}
+              {event.venueName || "No venue set"}
             </div>
             {event.vendors && event.vendors.length > 0 && (
               <div className={styles.eventVendors}>
-                {event.vendors.map((vendor) => vendor.name).join(", ")}
+                 {event.vendors.map((vendor) => vendor.name).join(", ")}
               </div>
             )}
-            {event.weatherIcon ? (
+            {event.weatherData && event.weatherData.icon ? (
               <div className={styles.eventWeather}>
-                {getWeatherEmoji(event.weatherIcon)} {event.weatherDescription},{" "}
-                {event.temperature}°F
+                {getWeatherEmoji(event.weatherData.icon)}{" "}
+                {event.weatherData.description}, {event.weatherData.temperature}
                 {event.date === new Date().toISOString().split("T")[0]
                   ? " (Current)"
                   : " (Forecast)"}
               </div>
             ) : (
               <div className={styles.eventWeather}>
-                {event.weatherDescription}
+                Weather data not available
               </div>
             )}
           </div>

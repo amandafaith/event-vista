@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [eventUpdateCount, setEventUpdateCount] = useState(0);
   const navigate = useNavigate();
 
   const redirectToUserProfile = () => {
@@ -51,6 +52,7 @@ const Dashboard = () => {
       await fetchEvents();
       setSuccessMessage("Event created successfully!");
       setShowEventForm(false);
+      setEventUpdateCount((prev) => prev + 1);
     } catch (err) {
       console.error("Error saving event:", err);
       setError("Failed to create event. Please try again.");
@@ -65,6 +67,7 @@ const Dashboard = () => {
     try {
       await fetchEvents();
       setSuccessMessage("Event updated successfully!");
+      setEventUpdateCount((prev) => prev + 1);
     } catch (err) {
       console.error("Error updating events:", err);
       setError("Failed to update events. Please try again.");
@@ -94,83 +97,93 @@ const Dashboard = () => {
   }
 
   return (
-
-    <div className="dashboard-layout" style={{ display: "flex", minHeight: "100vh" }}>
+    <div
+      className="dashboard-layout"
+      style={{ display: "flex", minHeight: "100vh" }}
+    >
       {/* Left Sidebar */}
       <Sidebar />
-        {/* Main Content */}
-    <div className="dashboard-container" style={{
-      marginLeft: "200px", // same as sidebar width
-      padding: "1rem",
-      width: "100%",
-      boxSizing: "border-box"
-      }}>
-      <nav className="card">
-        <div className="container">
-          <div
-            className="flex"
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              height: "4rem",
-            }}
-          >
-            <div className="flex" style={{ alignItems: "center" }}>
-              <h1 className="card-title">Event Vista</h1>
-            </div>
-            <div className="flex" style={{ alignItems: "center", gap: "1rem" }}>
-
-              <span className="card-content">
-                Welcome, {user?.name || "User"}
-              </span>
-              <img
-                src={user.pictureUrl}
-                alt="Profile"
-                className="dashboard-profile-pic"
-              />
-                <button onClick={redirectToUserProfile} className="button button-primary">
-                 Profile
-                 </button>
-              <button
-                onClick={handleAddEvent}
-                className="button button-primary"
+      {/* Main Content */}
+      <div
+        className="dashboard-container"
+        style={{
+          marginLeft: "200px", // same as sidebar width
+          padding: "1rem",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <nav className="card">
+          <div className="container">
+            <div
+              className="flex"
+              style={{
+                justifyContent: "space-between",
+                alignItems: "center",
+                height: "4rem",
+              }}
+            >
+              <div className="flex" style={{ alignItems: "center" }}>
+                <h1 className="card-title">Event Vista</h1>
+              </div>
+              <div
+                className="flex"
+                style={{ alignItems: "center", gap: "1rem" }}
               >
-                Add Event
-              </button>
-              <button onClick={logout} className="button button-secondary">
-                Logout
-              </button>
+                <span className="card-content">
+                  Welcome, {user?.name || "User"}
+                </span>
+                <img
+                  src={user.pictureUrl}
+                  alt="Profile"
+                  className="dashboard-profile-pic"
+                />
+                <button
+                  onClick={redirectToUserProfile}
+                  className="button button-primary"
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={handleAddEvent}
+                  className="button button-primary"
+                >
+                  Add Event
+                </button>
+                <button onClick={logout} className="button button-secondary">
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <div className="dashboard-content">
-        {successMessage && (
-          <div className="success-message" style={{ margin: "1rem 0" }}>
-            {successMessage}
+        <div className="dashboard-content">
+          {successMessage && (
+            <div className="success-message" style={{ margin: "1rem 0" }}>
+              {successMessage}
+            </div>
+          )}
+          {error && (
+            <div className="error-message" style={{ margin: "1rem 0" }}>
+              {error}
+            </div>
+          )}
+          <Calendar events={events} onEventUpdated={handleEventUpdated} />
+          <UpcomingEvents refreshTrigger={eventUpdateCount} />
+        </div>
+
+        {showEventForm && (
+          <div className="modal-overlay">
+            <div className="modal-container">
+              <EventForm
+                onSubmit={handleSaveEvent}
+                onCancel={handleCancelEvent}
+              />
+            </div>
           </div>
         )}
-        {error && (
-          <div className="error-message" style={{ margin: "1rem 0" }}>
-            {error}
-          </div>
-        )}
-        <Calendar events={events} onEventUpdated={handleEventUpdated} />
-        <UpcomingEvents events={events} />
       </div>
-
-      {showEventForm && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <EventForm
-              onSubmit={handleSaveEvent}
-              onCancel={handleCancelEvent}
-            />
-          </div>
-        </div>
-      )}
-    </div>
     </div>
   );
 };

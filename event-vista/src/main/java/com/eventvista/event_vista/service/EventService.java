@@ -109,29 +109,34 @@ public class EventService {
 // Returns The updated event
 // Throws EventNotFoundException if the event doesn't exist or doesn't belong to the user
 // Throws InvalidEventDataException if the event data is invalid
-    @Transactional
-    public Event updateEvent(Integer id, Event updatedEvent, User user) {
-        validateEventData(updatedEvent);
+@Transactional
+public Event updateEvent(Integer id, Event updatedEvent, User user) {
+    validateEventData(updatedEvent);
 
-        return eventRepository.findByIdAndUser(id, user)
-                .map(existingEvent -> {
-                    // Update basic fields
-                    existingEvent.setName(updatedEvent.getName());
-                    existingEvent.setDate(updatedEvent.getDate());
-                    existingEvent.setTime(updatedEvent.getTime());
-                    existingEvent.setNotes(updatedEvent.getNotes());
+    return eventRepository.findByIdAndUser(id, user)
+            .map(existingEvent -> {
+                // Update basic fields
+                existingEvent.setName(updatedEvent.getName());
+                existingEvent.setDate(updatedEvent.getDate());
+                existingEvent.setTime(updatedEvent.getTime());
+                existingEvent.setNotes(updatedEvent.getNotes());
 
-                    // Handle venue relationship
-                    if (updatedEvent.getVenue() != null && updatedEvent.getVenue().getId() != null) {
-                        venueService.findVenueById(updatedEvent.getVenue().getId(), user)
-                                .ifPresent(existingEvent::setVenue);
-                    }
+                // Handle venue relationship
+                if (updatedEvent.getVenue() != null && updatedEvent.getVenue().getId() != null) {
+                    venueService.findVenueById(updatedEvent.getVenue().getId(), user)
+                            .ifPresent(existingEvent::setVenue);
+                }
 
-                    // Calendar relationship remains unchanged as it's tied to the user
-                    return eventRepository.save(existingEvent);
-                })
-                .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
-    }
+                // Handle vendors relationship
+                if (updatedEvent.getVendors() != null) {
+                    existingEvent.setVendors(new ArrayList<>(updatedEvent.getVendors()));
+                }
+
+                // Calendar relationship remains unchanged as it's tied to the user
+                return eventRepository.save(existingEvent);
+            })
+            .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
+}
 
 
 // Deletes an event

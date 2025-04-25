@@ -48,6 +48,11 @@
   margin-bottom: 5px;
 }
 
+.eventLocation::before {
+  content: "📍";
+  margin-right: 0.5rem;
+}
+
 .eventWeather {
   color: #666;
   font-size: 0.9rem;

@@ -1,10 +1,12 @@
 package com.eventvista.event_vista.model.dto;
 
 import com.eventvista.event_vista.model.Event;
+import com.eventvista.event_vista.model.Vendor;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpcomingEventDTO {
@@ -15,6 +17,7 @@ public class UpcomingEventDTO {
     private String location;
     private String venueName;
     private WeatherData weatherData;
+    private List<Vendor> vendors;
 
     public UpcomingEventDTO() {
     }
@@ -27,6 +30,7 @@ public class UpcomingEventDTO {
         this.location = event.getVenue() != null ? event.getVenue().getLocation() : "No venue set";
         this.venueName = event.getVenue() != null ? event.getVenue().getName() : null;
         this.weatherData = weatherData;
+        this.vendors = event.getVendors();
     }
 
     // Getters and setters
@@ -84,5 +88,13 @@ public class UpcomingEventDTO {
 
     public void setWeatherData(WeatherData weatherData) {
         this.weatherData = weatherData;
+    }
+
+    public List<Vendor> getVendors() {
+        return vendors;
+    }
+
+    public void setVendors(List<Vendor> vendors) {
+        this.vendors = vendors;
     }
 }
