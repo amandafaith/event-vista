@@ -152,21 +152,21 @@ const EventForm = ({ onSubmit, onCancel }) => {
 
   return (
     <Modal onClose={onCancel}>
-      <div className="form-container">
-        <div className="form-header">
-          <h2 className="form-title">Add New Event</h2>
-          <p className="form-subtitle">Enter the event details below</p>
+      <div className={styles.formContainer}>
+        <div className={styles.formHeader}>
+          <h2 className={styles.formTitle}>Add New Event</h2>
+          <p className={styles.formSubtitle}>Enter the event details below</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
-            <label className="form-label">Event Name</label>
+            <label className={styles.label}>Event Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`form-input ${errors.name ? styles.error : ""}`}
+              className={`${styles.input} ${errors.name ? styles.error : ""}`}
               required
             />
             {errors.name && (
@@ -175,13 +175,13 @@ const EventForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className="form-label">Date</label>
+            <label className={styles.label}>Date</label>
             <input
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className={`form-input ${errors.date ? styles.error : ""}`}
+              className={`${styles.input} ${errors.date ? styles.error : ""}`}
               required
             />
             {errors.date && (
@@ -190,13 +190,13 @@ const EventForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className="form-label">Time</label>
+            <label className={styles.label}>Time</label>
             <input
               type="time"
               name="time"
               value={formData.time}
               onChange={handleChange}
-              className={`form-input ${errors.time ? styles.error : ""}`}
+              className={`${styles.input} ${errors.time ? styles.error : ""}`}
               required
             />
             {errors.time && (
@@ -205,12 +205,12 @@ const EventForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className="form-label">Venue</label>
+            <label className={styles.label}>Venue</label>
             <select
               name="venue"
               value={formData.venue?.id || ""}
               onChange={handleVenueChange}
-              className={`form-input ${errors.venue ? styles.error : ""}`}
+              className={`${styles.input} ${errors.venue ? styles.error : ""}`}
             >
               <option value="">Select a venue (optional)</option>
               {venues.map((venue) => (
@@ -225,12 +225,12 @@ const EventForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className="form-label">Vendors</label>
+            <label className={styles.label}>Vendors</label>
             <select
               name="vendors"
               value=""
               onChange={handleVendorChange}
-              className={`form-input ${errors.vendor ? styles.error : ""}`}
+              className={`${styles.input} ${errors.vendor ? styles.error : ""}`}
             >
               <option value="">Select a vendor (optional)</option>
               {vendors
@@ -266,12 +266,12 @@ const EventForm = ({ onSubmit, onCancel }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className="form-label">Notes</label>
+            <label className={styles.label}>Notes</label>
             <textarea
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              className="form-input"
+              className={styles.input}
               rows="4"
             />
           </div>
@@ -280,14 +280,14 @@ const EventForm = ({ onSubmit, onCancel }) => {
             <div className={styles.errorMessage}>{errors.submit}</div>
           )}
 
-          <div className="flex" style={{ gap: "1rem", marginTop: "2rem" }}>
-            <button type="submit" className="button button-primary">
+          <div className={styles.buttonGroup}>
+            <button type="submit" className={styles.submitButton}>
               Create Event
             </button>
             <button
               type="button"
               onClick={onCancel}
-              className="button button-secondary"
+              className={styles.cancelButton}
             >
               Cancel
             </button>

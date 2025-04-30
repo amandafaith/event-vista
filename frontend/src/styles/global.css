@@ -1,20 +1,30 @@
 /* CSS Variables */
 :root {
   /* Colors */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #ec4899;
-  --secondary-light: #f472b6;
-  --secondary-dark: #db2777;
-  --background: #f9fafb;
-  --paper: #ffffff;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --error: #ef4444;
-  --warning: #f59e0b;
+  --primary: #4361ee;
+  --primary-light: #4895ef;
+  --primary-dark: #3f37c9;
+  --secondary: #3b82f6;
+  --secondary-light: #60a5fa;
+  --secondary-dark: #2563eb;
+  --accent-1: #f72585;
+  --accent-2: #4cc9f0;
+  --accent-3: #560bad;
+  --background: #ffffff;
+  --background-light: #f8f9fa;
+  --background-dark: #f0f2f5;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-light: #ffffff;
+  --border-color: #e5e7eb;
+  --error: #dc2626;
+  --error-light: #fee2e2;
+  --warning: #d97706;
+  --warning-light: #fef3c7;
+  --success: #059669;
+  --success-light: #d1fae5;
   --info: #3b82f6;
-  --success: #10b981;
+  --info-light: #dbeafe;
 
   /* Spacing */
   --spacing-xs: 4px;

@@ -123,6 +123,16 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
     }
   };
 
+  // Add function to format time in 12-hour format
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   const renderViewMode = () => (
     <div className={styles.viewMode}>
       <div className={styles.eventDetails}>
@@ -131,7 +141,7 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
           <strong>Date:</strong> {event.date}
         </p>
         <p>
-          <strong>Time:</strong> {event.time}
+          <strong>Time:</strong> {formatTime(event.time)}
         </p>
         {event.venue && (
           <p>
@@ -310,18 +320,18 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>
-            {action === "view"
-              ? "Event Details"
-              : action === "edit"
+            {action === "edit"
               ? "Edit Event"
-              : "Rebook Event"}
+              : action === "rebook"
+              ? "Rebook Event"
+              : ""}
           </h2>
           <p className={styles.modalSubtitle}>
-            {action === "view"
-              ? "View and manage event details"
-              : action === "edit"
+            {action === "edit"
               ? "Update the event details below"
-              : "Enter new details for the rebooked event"}
+              : action === "rebook"
+              ? "Enter new details for the rebooked event"
+              : ""}
           </p>
         </div>
 

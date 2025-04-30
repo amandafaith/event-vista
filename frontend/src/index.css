@@ -15,8 +15,6 @@ code {
     monospace;
 }
 
-
-
 header {
   display: flex;
   flex-direction: row;
@@ -36,13 +34,13 @@ h3 {
 }
 
 h1 {
-  color: #da8034;
+  color: var(--primary);
   font-weight: 700;
 }
 
 h2 {
-  color: white;
-  background-color: #da8034;
+  color: var(--text-light);
+  background-color: var(--primary);
   font-size: 20px;
   font-weight: 200;
   letter-spacing: 6px;
@@ -83,14 +81,14 @@ main {
 }
 
 a {
-  color: #da8034;
+  color: var(--primary);
   font-weight: bold;
   text-decoration: none;
 }
 
 a:hover,
 a:active {
-  color: #b95a0a;
+  color: var(--primary-dark);
 }
 
 a.navlink:link,
@@ -182,12 +180,12 @@ a.navlink:active {
 }
 
 .nav-links a {
-  color: #da8034;
+  color: var(--primary);
   font-weight: bold;
   text-decoration: none;
 }
 
 .nav-links a:hover,
 .nav-links a:active {
-  color: #b95a0a;
+  color: var(--primary-dark);
 }

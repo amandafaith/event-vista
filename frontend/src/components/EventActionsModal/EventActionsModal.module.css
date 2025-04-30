@@ -12,9 +12,9 @@
 }
 
 .modalContainer {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 500px;
   padding: 2rem;
@@ -50,6 +50,8 @@
 
 .modalHeader {
   margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modalTitle {
@@ -57,11 +59,13 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  background: transparent;
 }
 
 .modalSubtitle {
   font-size: 0.875rem;
   color: var(--text-secondary);
+  background: transparent;
 }
 
 .viewMode {
@@ -74,23 +78,28 @@
 .eventDetails {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+  background: transparent;
+  margin-top: -0.5rem;
 }
 
 .eventDetails h2 {
   font-size: 1.25rem;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  background: transparent;
 }
 
 .eventDetails p {
   margin: 0;
   line-height: 1.5;
+  background: transparent;
 }
 
 .eventDetails strong {
   color: var(--text-primary);
   margin-right: 0.5rem;
+  background: transparent;
 }
 
 .form {
@@ -103,54 +112,117 @@
 }
 
 .formGroup {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
   color: var(--text-primary);
+  font-weight: 500;
 }
 
 .input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  background-color: var(--background);
+}
+
+/* Specific styles for date input */
+.input[type="date"] {
+  position: relative;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* Make the calendar picker indicator invisible but still functional */
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+/* Add a visible calendar icon */
+.input[type="date"]::after {
+  content: "📅";
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Specific styles for time input */
+.input[type="time"] {
+  position: relative;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* Make the time picker indicator invisible but still functional */
+.input[type="time"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+/* Add a visible clock icon */
+.input[type="time"]::after {
+  content: "⏰";
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   font-size: 1rem;
   min-height: 100px;
   resize: vertical;
   transition: border-color 0.2s;
+  background-color: var(--background);
 }
 
 .textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .error {
-  border-color: var(--error-color) !important;
+  border-color: var(--error) !important;
 }
 
 .errorText {
-  color: var(--error-color);
+  color: var(--error);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
@@ -160,31 +232,30 @@
   gap: 1rem;
   margin-top: auto;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-  background-color: white;
+  background-color: transparent;
   position: sticky;
   bottom: 0;
   z-index: 10;
+  border-top: 1px solid var(--border-color);
 }
 
 .button {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-md);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   flex: 1;
   text-align: center;
-  color: white !important;
+  color: var(--text-light) !important;
   background-color: transparent !important;
 }
 
 .submitButton {
   composes: button;
   background-color: var(--primary) !important;
-  color: white !important;
 }
 
 .submitButton:hover {
@@ -199,7 +270,6 @@
 .cancelButton {
   composes: button;
   background-color: var(--secondary) !important;
-  color: white !important;
 }
 
 .cancelButton:hover {
@@ -208,12 +278,11 @@
 
 .deleteButton {
   composes: button;
-  background-color: #dc2626 !important;
-  color: white !important;
+  background-color: var(--error) !important;
 }
 
 .deleteButton:hover {
-  background-color: #b91c1c !important;
+  background-color: var(--error-dark) !important;
 }
 
 .selectedVendors {
@@ -227,24 +296,25 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--background-light);
-  border-radius: 4px;
+  background-color: var(--primary-light);
+  color: var(--text-light);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-md);
   font-size: 0.875rem;
 }
 
 .removeVendor {
   background: none;
   border: none;
-  color: var(--error-color);
+  color: var(--text-light);
   cursor: pointer;
+  font-size: 1rem;
   padding: 0;
-  font-size: 1.2rem;
   line-height: 1;
 }
 
 .removeVendor:hover {
-  color: var(--error-dark);
+  color: var(--error);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

@@ -24,6 +24,22 @@
   animation: modalAppear 0.3s ease;
 }
 
+/* Reset specific form styles */
+.modalContainer :global(.formContainer),
+.modalContainer :global(.formHeader),
+.modalContainer :global(.formTitle),
+.modalContainer :global(.formSubtitle),
+.modalContainer :global(.form),
+.modalContainer :global(.formGroup),
+.modalContainer :global(.label),
+.modalContainer :global(.input) {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
 .modalClose {
   position: absolute;
   top: 1rem;

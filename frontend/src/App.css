@@ -31,13 +31,13 @@ p {
 
 /* Links */
 a {
-  color: #4f46e5;
+  color: var(--primary);
   text-decoration: none;
   transition: color 0.15s ease-in-out;
 }
 
 a:hover {
-  color: #4338ca;
+  color: var(--primary-dark);
 }
 
 /* Utility Classes */
@@ -176,13 +176,13 @@ h3 {
 }
 
 h1 {
-  color: #da8034;
+  color: var(--primary);
   font-weight: 700;
 }
 
 h2 {
-  color: white;
-  background-color: #da8034;
+  color: var(--text-light);
+  background-color: var(--primary);
   font-size: 20px;
   font-weight: 200;
   letter-spacing: 6px;
@@ -237,14 +237,14 @@ main {
 
 /* Links */
 a {
-  color: #da8034;
+  color: var(--primary);
   font-weight: bold;
   text-decoration: none;
 }
 
 a:hover,
 a:active {
-  color: #b95a0a;
+  color: var(--primary-dark);
 }
 
 a.navlink:link,
@@ -320,14 +320,14 @@ a.navlink:active {
 }
 
 .nav-links a {
-  color: #da8034;
+  color: var(--primary);
   font-weight: bold;
   text-decoration: none;
 }
 
 .nav-links a:hover,
 .nav-links a:active {
-  color: #b95a0a;
+  color: var(--primary-dark);
 }
 
 /* Top Right Navigation */
@@ -340,12 +340,12 @@ a.navlink:active {
 }
 
 .top-right-links a {
-  color: #da8034;
+  color: var(--primary);
   font-weight: bold;
   text-decoration: none;
 }
 
 .top-right-links a:hover,
 .top-right-links a:active {
-  color: #b95a0a;
+  color: var(--primary-dark);
 }
