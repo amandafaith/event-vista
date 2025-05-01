@@ -77,7 +77,7 @@ const UpcomingEvents = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.upcomingEvents}>
-      <h2>Upcoming Events (Next 5 Days)</h2>
+      <h2>Upcoming Events</h2>
       <div className={styles.eventsList}>
         {upcomingEvents.map((event) => (
           <div key={event.id} className={styles.eventCard}>

@@ -150,8 +150,17 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
 
   const getTimeSlots = () => {
     const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      slots.push(`${hour.toString().padStart(2, "0")}:00`);
+    // First add times from 8 AM to 11 PM
+    for (let hour = 8; hour < 24; hour++) {
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12;
+      slots.push(`${hour12}:00 ${ampm}`);
+    }
+    // Then add times from 12 AM to 7 AM
+    for (let hour = 0; hour < 8; hour++) {
+      const ampm = "AM";
+      const hour12 = hour % 12 || 12;
+      slots.push(`${hour12}:00 ${ampm}`);
     }
     return slots;
   };
@@ -167,6 +176,43 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
     if (onEventUpdated) {
       onEventUpdated();
     }
+  };
+
+  const handleScrollToEvent = (eventIndex, eventDate) => {
+    console.log("Scrolling to event index:", eventIndex);
+    console.log("For date:", eventDate);
+
+    // Find the current day container
+    const dayContainer = document.querySelector(
+      `.${styles.calendarDay}[data-date="${eventDate.toISOString()}"]`
+    );
+    console.log("Day container found:", !!dayContainer);
+
+    if (!dayContainer) return;
+
+    // Find the events container
+    const eventsContainer = dayContainer.querySelector(
+      `.${styles.calendarDayEvents}`
+    );
+    console.log("Events container found:", !!eventsContainer);
+
+    if (!eventsContainer) return;
+
+    // Find all events
+    const events = eventsContainer.querySelectorAll(`.${styles.calendarEvent}`);
+    console.log("Number of events found:", events.length);
+
+    if (!events || !events[eventIndex]) return;
+
+    // Get the target event
+    const targetEvent = events[eventIndex];
+    console.log("Target event found:", !!targetEvent);
+
+    // Scroll to the event
+    targetEvent.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   };
 
   const renderMonthView = () => {
@@ -206,8 +252,25 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
       const dayEvents = getEventsForDate(date);
 
       days.push(
-        <div key={day} className={styles.calendarDay}>
-          <div className={styles.calendarDayNumber}>{day}</div>
+        <div
+          key={day}
+          className={styles.calendarDay}
+          data-date={date.toISOString()}
+        >
+          <div className={styles.calendarDayNumber}>
+            {day}
+            {dayEvents.length > 1 && (
+              <div className={styles.eventIndicators}>
+                {dayEvents.map((_, index) => (
+                  <div
+                    key={index}
+                    className={styles.eventIndicator}
+                    title={`Event ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
           <div className={styles.calendarDayEvents}>
             {dayEvents.map((event) => (
               <div
@@ -334,9 +397,22 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
               <div className={styles.calendarTime}>{time}</div>
               <div className={styles.calendarSlotContent}>
                 {dayEvents
-                  .filter(
-                    (event) => event.time.split(":")[0] === time.split(":")[0]
-                  )
+                  .filter((event) => {
+                    const eventHour = parseInt(event.time.split(":")[0]);
+                    const slotHour = parseInt(time.split(":")[0]);
+                    const slotIsPM = time.includes("PM");
+                    const eventIsPM = eventHour >= 12;
+
+                    // Convert both to 24-hour format for comparison
+                    const slot24Hour = slotIsPM
+                      ? slotHour === 12
+                        ? 12
+                        : slotHour + 12
+                      : slotHour === 12
+                      ? 0
+                      : slotHour;
+                    return eventHour === slot24Hour;
+                  })
                   .map((event) => (
                     <div key={event.id} className={styles.calendarEventWeek}>
                       <div className={styles.weekEventTime}>

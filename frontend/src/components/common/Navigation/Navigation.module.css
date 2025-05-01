@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to right, var(--primary-light), var(--primary));
+  background: linear-gradient(to bottom right, var(--primary-light-2), var(--primary-light));
   padding: 0.75rem 2rem;
   color: var(--text-light);
   box-shadow: var(--shadow-md);
@@ -47,6 +47,7 @@
 
 .navLink:hover {
   opacity: 1;
+  color: var(--secondary);
   background: rgba(255, 255, 255, 0.1);
 }
 

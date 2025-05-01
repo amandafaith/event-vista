@@ -1,5 +1,5 @@
 .upcomingEvents {
-  background: var(--background);
+  background: linear-gradient(to bottom right, var(--primary-light-2), var(--primary-light));
   border-radius: var(--border-radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
@@ -8,15 +8,25 @@
 
 .upcomingEvents h2 {
   margin: 0 0 1.25rem 0;
-  color: var(--text-primary);
+  color: var(--text-light);
   font-size: 1.5rem;
   font-weight: 600;
-  background-color: var(--background-light);
+  background: rgba(255, 255, 255, 0.2);
   padding: 1rem;
   border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-color);
+  border: .5px solid var(--border-color);
+
 }
 
+/*
+  color: var(--text-light);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
+*/
 .eventsList {
   display: flex;
   flex-direction: column;
@@ -24,11 +34,11 @@
 }
 
 .eventCard {
-  background: var(--background-light);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: var(--border-radius-md);
   padding: 1rem;
   transition: all 0.2s ease;
-  border: 1px solid var(--border-color);
+  border: .5px solid var(--border-color);
 }
 
 .eventCard:hover {
@@ -39,19 +49,19 @@
 
 .eventDate {
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-light);
   margin-bottom: 0.5rem;
 }
 
 .eventName {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-light);
   margin-bottom: 0.5rem;
 }
 
 .eventLocation {
-  color: var(--text-secondary);
+  color: var(--text-light);
   margin-bottom: 0.5rem;
 }
 
@@ -61,7 +71,7 @@
 }
 
 .eventWeather {
-  color: var(--text-secondary);
+  color: var(--text-light);
   font-size: 0.9rem;
 }
 
@@ -76,7 +86,7 @@
 .eventVendors {
   margin: 0.5rem 0;
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--text-light);
 }
 
 .eventVendors::before {

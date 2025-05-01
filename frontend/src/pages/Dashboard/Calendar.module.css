@@ -16,7 +16,11 @@
   align-items: center;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  background: linear-gradient(to right, var(--primary-light), var(--primary));
+  background: linear-gradient(
+    to bottom right,
+    var(--primary-light),
+    var(--primary-light-2)
+  );
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -55,6 +59,7 @@
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-md);
+  /* border: .5px solid var(--border-color); */
 }
 
 .viewControls {
@@ -199,7 +204,9 @@
   border-bottom: 1px solid #e0e0e0;
   position: relative;
   min-height: 120px;
-  overflow: hidden;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendarDay:nth-child(7n) {
@@ -215,29 +222,64 @@
   margin-bottom: 0.25rem;
   color: var(--text-primary);
   font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+  padding: 0 5px;
 }
+
+.eventIndicators {
+  display: flex;
+  gap: 2px;
+}
+
+.eventIndicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+
 
 .calendarDayEvents {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: calc(100% - 1.5rem);
+  flex: 1;
   overflow-y: auto;
+  max-height: calc(100% - 1.5rem);
+  padding-right: 2px;
+  scroll-behavior: smooth;
+  position: relative;
 }
+
+.calendarDayEvents::-webkit-scrollbar {
+  display: none;
+}
+
+.calendarDayEvents {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+
 
 /* Month View Event Styles */
 .calendarDay .calendarEvent {
-  background-color: #3498db;
+  background-color: #60a5fa;
   color: white;
   padding: 3px 6px;
   border-radius: 3px;
   font-size: 0.65rem;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 2px solid #2980b9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border-left: 1px solid #2980b9;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
   line-height: 1.3;
   display: flex;
   flex-direction: column;
@@ -335,14 +377,14 @@
 
 /* Week View Event Styles */
 .calendarEventWeek {
-  background-color: #3498db;
+  background-color: #60a5fa;
   color: white;
   padding: 4px 6px;
   border-radius: 3px;
   margin-bottom: 2px;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 3px solid #2980b9;
+  border-left: 1px solid #2980b9;
 }
 
 .weekEventTime {
@@ -431,14 +473,14 @@
 
 /* Day View Event Styles */
 .calendarDayView .calendarEventWeek {
-  background-color: #3498db;
+  background-color: #60a5fa;
   color: white;
   padding: 6px 8px;
   border-radius: 4px;
   margin-bottom: 4px;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 4px solid #2980b9;
+  border-left: 1px solid #2980b9;
 }
 
 .calendarDayView .weekEventTime {
