@@ -7,7 +7,7 @@ import VendorForm from "./VendorForm";
 import VendorSearch from "./VendorSearch";
 import VendorSearchResults from "./VendorSearchResults";
 import Modal from "../../components/common/Modal/Modal";
-import Sidebar from "../Dashboard/Sidebar";
+import Navigation from "../../components/common/Navigation/Navigation";
 
 const VendorPage = () => {
     const [vendors, setVendors] = useState([]);
@@ -256,62 +256,62 @@ const VendorPage = () => {
     }
 
     return (
-          <div style={{ display: "flex", minHeight: "100vh" }}>
-            <Sidebar />
-        <div className="container" style={{ padding: "2rem", marginLeft: "200px", flex: 1, boxSizing: "border-box" }}>
-          <div className="dashboard-header">
-            <h2 className="dashboard-title">Vendors</h2>
-            <p className="dashboard-subtitle">Manage your event vendors</p>
+        <div className="page-container">
+            <Navigation />
+            <div className="content-container">
+                <div className="dashboard-header">
+                    <h2 className="dashboard-title">Vendors</h2>
+                    <p className="dashboard-subtitle">Manage your event vendors</p>
 
-            <VendorSearch
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              searchType={searchType}
-              setSearchType={setSearchType}
-              onSearch={handleSearch}
-            />
+                    <VendorSearch
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        searchType={searchType}
+                        setSearchType={setSearchType}
+                        onSearch={handleSearch}
+                    />
 
-            <button
-              className="button button-primary"
-              onClick={handleAddVendor}
-              style={{ marginTop: "1rem" }}
-            >
-              Add New Vendor
-            </button>
-            <button
-                className="button button-secondary"
-                onClick={handleViewAll}
-                style={{ marginTop: "1rem", marginLeft: "1rem" }}
-            >
-                View All
-            </button>
-          </div>
+                    <button
+                        className="button button-primary"
+                        onClick={handleAddVendor}
+                        style={{ marginTop: "1rem" }}
+                    >
+                        Add New Vendor
+                    </button>
+                    <button
+                        className="button button-secondary"
+                        onClick={handleViewAll}
+                        style={{ marginTop: "1rem", marginLeft: "1rem" }}
+                    >
+                        View All
+                    </button>
+                </div>
 
-          {error && (
-            <div className="error-message" style={{ marginBottom: "1rem" }}>
-              {error}
+                {error && (
+                    <div className="error-message" style={{ marginBottom: "1rem" }}>
+                        {error}
+                    </div>
+                )}
+
+                <VendorSearchResults
+                    vendors={searchResults}
+                    onEdit={handleEditVendor}
+                    onDelete={handleDeleteVendor}
+                />
+
+                {showVendorForm && (
+                    <Modal onClose={() => setShowVendorForm(false)}>
+                        <VendorForm
+                            initialData={selectedVendor}
+                            onSubmit={handleVendorSubmit}
+                            onCancel={() => {
+                                setShowVendorForm(false);
+                                setSelectedVendor(null);
+                            }}
+                        />
+                    </Modal>
+                )}
             </div>
-          )}
-
-          <VendorSearchResults
-            vendors={searchResults}
-            onEdit={handleEditVendor}
-            onDelete={handleDeleteVendor}
-          />
-
-          {showVendorForm && (
-            <Modal onClose={() => setShowVendorForm(false)}>
-              <VendorForm
-                initialData={selectedVendor}
-                onSubmit={handleVendorSubmit}
-                onCancel={() => {
-                          setShowVendorForm(false);
-                          setSelectedVendor(null);
-              }}
-              />
-            </Modal>
-          )}
-        </div>
         </div>
     );
 };

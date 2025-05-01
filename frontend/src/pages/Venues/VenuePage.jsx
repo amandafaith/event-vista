@@ -7,7 +7,7 @@ import VenueForm from "./VenueForm";
 import VenueSearch from "./VenueSearch";
 import VenueSearchResults from "./VenueSearchResults";
 import Modal from "../../components/common/Modal/Modal";
-import Sidebar from "../Dashboard/Sidebar";
+import Navigation from "../../components/common/Navigation/Navigation";
 
 const VenuePage = () => {
   const [venues, setVenues] = useState([]);
@@ -206,59 +206,59 @@ const VenuePage = () => {
   }
 
   return (
-                <div style={{ display: "flex", minHeight: "100vh" }}>
-                  <Sidebar />
-    <div className="container" style={{ padding: "2rem", marginLeft: "200px", flex: 1, boxSizing: "border-box" }}>
-      <div className="dashboard-header">
-        <h2 className="dashboard-title">Venues</h2>
-        <p className="dashboard-subtitle">Manage your event venues</p>
+    <div className="page-container">
+      <Navigation />
+      <div className="content-container">
+        <div className="dashboard-header">
+          <h2 className="dashboard-title">Venues</h2>
+          <p className="dashboard-subtitle">Manage your event venues</p>
 
-        <VenueSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          searchType={searchType}
-          setSearchType={setSearchType}
-          onSearch={handleSearch}
-        />
+          <VenueSearch
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            onSearch={handleSearch}
+          />
 
-        <button
-          className="button button-primary"
-          onClick={handleAddVenue}
-          style={{ marginTop: "1rem" }}
-        >
-          Add New Venue
-        </button>
-         <button
+          <button
+            className="button button-primary"
+            onClick={handleAddVenue}
+            style={{ marginTop: "1rem" }}
+          >
+            Add New Venue
+          </button>
+          <button
             className="button button-secondary"
             onClick={handleViewAll}
             style={{ marginTop: "1rem", marginLeft: "1rem" }}
           >
             View All
-        </button>
-      </div>
-
-      {error && (
-        <div className="error-message" style={{ marginBottom: "1rem" }}>
-          {error}
+          </button>
         </div>
-      )}
 
-      <VenueSearchResults
-        venues={searchResults}
-        onEdit={handleEditVenue}
-        onDelete={handleDeleteVenue}
-      />
+        {error && (
+          <div className="error-message" style={{ marginBottom: "1rem" }}>
+            {error}
+          </div>
+        )}
 
-      {showVenueForm && (
-        <Modal onClose={() => setShowVenueForm(false)}>
-          <VenueForm
-            initialData={selectedVenue}
-            onSubmit={handleVenueSubmit}
-            onCancel={() => setShowVenueForm(false)}
-          />
-        </Modal>
-      )}
-    </div>
+        <VenueSearchResults
+          venues={searchResults}
+          onEdit={handleEditVenue}
+          onDelete={handleDeleteVenue}
+        />
+
+        {showVenueForm && (
+          <Modal onClose={() => setShowVenueForm(false)}>
+            <VenueForm
+              initialData={selectedVenue}
+              onSubmit={handleVenueSubmit}
+              onCancel={() => setShowVenueForm(false)}
+            />
+          </Modal>
+        )}
+      </div>
     </div>
   );
 };

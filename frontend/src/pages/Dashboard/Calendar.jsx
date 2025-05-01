@@ -3,7 +3,7 @@ import styles from "./Calendar.module.css";
 import EventActionsModal from "../../components/EventActionsModal/EventActionsModal";
 import { eventApi } from "../../services/api";
 
-const Calendar = ({ onEventUpdated }) => {
+const Calendar = ({ onEventUpdated, onAddEvent }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month");
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -407,24 +407,29 @@ const Calendar = ({ onEventUpdated }) => {
           <h2>{getViewTitle()}</h2>
           <button onClick={handleNext}>&gt;</button>
         </div>
-        <div className={styles.viewControls}>
-          <button
-            className={viewMode === "month" ? styles.active : ""}
-            onClick={() => setViewMode("month")}
-          >
-            Month
-          </button>
-          <button
-            className={viewMode === "week" ? styles.active : ""}
-            onClick={() => setViewMode("week")}
-          >
-            Week
-          </button>
-          <button
-            className={viewMode === "day" ? styles.active : ""}
-            onClick={() => setViewMode("day")}
-          >
-            Day
+        <div className={styles.headerControls}>
+          <div className={styles.viewControls}>
+            <button
+              className={viewMode === "month" ? styles.active : ""}
+              onClick={() => setViewMode("month")}
+            >
+              Month
+            </button>
+            <button
+              className={viewMode === "week" ? styles.active : ""}
+              onClick={() => setViewMode("week")}
+            >
+              Week
+            </button>
+            <button
+              className={viewMode === "day" ? styles.active : ""}
+              onClick={() => setViewMode("day")}
+            >
+              Day
+            </button>
+          </div>
+          <button onClick={onAddEvent} className={styles.addEventButton}>
+            Add Event
           </button>
         </div>
       </div>

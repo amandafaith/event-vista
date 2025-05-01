@@ -1,27 +1,32 @@
-
-
-
 /*
 /* Overall page container*/
 .user-profile-container {
   max-width: 600px;
   margin: 3rem auto;
   width: 100%;
-  marginLeft: "500px";
   box-sizing: border-box;
   padding: 2rem;
   background-color: #fdfaf4; /* A light cream color to mimic the screenshot background */
   border-radius: 8px;
   font-family: "Helvetica Neue", Arial, sans-serif;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: relative; /* For absolute positioning of child elements */
-    overflow: hidden; /* To contain the profile picture edit icon */
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      text-align: center;
-      color: #333; /* Darker text for better readability */
-    }
+  position: relative; /* For absolute positioning of child elements */
+  overflow: hidden; /* To contain the profile picture edit icon */
+}
+
+.user-profile-container h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #333; /* Darker text for better readability */
+}
+
+/* Profile layout */
+.profile-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background);
 }
 
 /* Profile picture section */
@@ -96,7 +101,7 @@
 /* Save button */
 .save-button {
   padding: 0.6rem 1.5rem;
-  background-color: #367bbc; /* A blue tone for the “Save” button */
+  background-color: #367bbc; /* A blue tone for the "Save" button */
   border: none;
   border-radius: 4px;
   color: #fff;
@@ -112,7 +117,7 @@
 /* Delete Account button */
 .delete-button {
   padding: 0.6rem 1.5rem;
-  background-color: #f44336; /* A red tone for the “Delete Account” button */
+  background-color: #f44336; /* A red tone for the "Delete Account" button */
   border: none;
   border-radius: 4px;
   color: #fff;
@@ -167,7 +172,8 @@
   justify-content: space-between;
 }
 
-.edit-button, .cancel-button {
+.edit-button,
+.cancel-button {
   background: none;
   border: none;
   color: #007bff;
@@ -176,7 +182,8 @@
   font-size: 0.9rem;
 }
 
-.edit-button:hover, .cancel-button:hover {
+.edit-button:hover,
+.cancel-button:hover {
   text-decoration: underline;
 }
 
@@ -185,9 +192,9 @@
   text-align: left;
   margin-bottom: 1rem;
   display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .back-to-dashboard-button {
@@ -197,9 +204,9 @@
   font-size: 1rem;
   cursor: pointer;
   padding: 0;
-    margin: 0 auto;
-    display: block;
-    text-align: center;
+  margin: 0 auto;
+  display: block;
+  text-align: center;
 }
 
 .back-to-dashboard-button:hover {
@@ -238,7 +245,6 @@
   gap: 0.5rem;
 }
 
-
 .account-actions {
   margin-top: 2rem;
   display: flex;
@@ -262,7 +268,6 @@
 .back-to-dashboard-button:hover {
   text-decoration: underline;
 }
-
 
 /* Profile Header: Typically used to display the profile picture area */
 .profile-header {
@@ -300,8 +305,7 @@
   object-fit: cover;
 }
 
-* Buttons */
-.button {
+* Buttons */ .button {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--border-radius-md);
   font-weight: 500;
@@ -339,4 +343,3 @@
   background-color: var(--primary);
   color: white;
 }
-

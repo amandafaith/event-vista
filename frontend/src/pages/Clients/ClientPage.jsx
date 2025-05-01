@@ -7,7 +7,7 @@ import ClientForm from "./ClientForm";
 import ClientSearch from "./ClientSearch";
 import ClientSearchResults from "./ClientSearchResults";
 import Modal from "../../components/common/Modal/Modal";
-import Sidebar from "../Dashboard/Sidebar";
+import Navigation from "../../components/common/Navigation/Navigation";
 
 const ClientPage = () => {
   const [clients, setClients] = useState([]);
@@ -196,54 +196,53 @@ const ClientPage = () => {
   }
 
   return (
-            <div className="profile-layout" style={{ display: "flex", minHeight: "100vh" }}>
-                <Sidebar />
-    <div className="container" style={{ padding: "2rem", marginLeft: "200px", flex: 1, boxSizing: "border-box" }}>
-      <div className="dashboard-header">
-        <h2 className="dashboard-title">Clients</h2>
-        <p className="dashboard-subtitle">Manage your clients</p>
+    <div className="page-container">
+      <Navigation />
+      <div className="content-container">
+        <div className="dashboard-header">
+          <h2 className="dashboard-title">Clients</h2>
+          <p className="dashboard-subtitle">Manage your clients</p>
 
-        <ClientSearch
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          searchType={searchType}
-          setSearchType={setSearchType}
-          onSearch={handleSearch}
+          <ClientSearch
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            searchType={searchType}
+            setSearchType={setSearchType}
+            onSearch={handleSearch}
+          />
+
+          <button
+            className="button button-primary"
+            onClick={handleAddClient}
+            style={{ marginTop: "1rem" }}
+          >
+            Add New Client
+          </button>
+        </div>
+
+        {error && (
+          <div className="error-message" style={{ marginBottom: "1rem" }}>
+            {error}
+          </div>
+        )}
+
+        <ClientSearchResults
+          clients={searchResults}
+          onEdit={handleEditClient}
+          onDelete={handleDeleteClient}
         />
 
-        <button
-          className="button button-primary"
-          onClick={handleAddClient}
-          style={{ marginTop: "1rem" }}
-        >
-          Add New Client
-        </button>
+        {showClientForm && (
+          <Modal onClose={() => setShowClientForm(false)}>
+            <ClientForm
+              initialData={selectedClient}
+              onSubmit={handleClientSubmit}
+              onCancel={() => setShowClientForm(false)}
+            />
+          </Modal>
+        )}
       </div>
-
-      {error && (
-        <div className="error-message" style={{ marginBottom: "1rem" }}>
-          {error}
-        </div>
-      )}
-
-      <ClientSearchResults
-        clients={searchResults}
-        onEdit={handleEditClient}
-        onDelete={handleDeleteClient}
-      />
-
-      {showClientForm && (
-        <Modal onClose={() => setShowClientForm(false)}>
-          <ClientForm
-            initialData={selectedClient}
-            onSubmit={handleClientSubmit}
-            onCancel={() => setShowClientForm(false)}
-          />
-        </Modal>
-      )}
     </div>
-            </div>
-
   );
 };
 

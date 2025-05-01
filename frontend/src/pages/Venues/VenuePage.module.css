@@ -18,7 +18,7 @@
 
 .addButton {
   padding: 0.75rem 1.5rem;
-  background-color: #4f46e5;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -28,7 +28,7 @@
 }
 
 .addButton:hover {
-  background-color: #4338ca;
+  background-color: var(--primary-dark);
 }
 
 .searchContainer {
@@ -36,7 +36,7 @@
   gap: 0.75rem;
   margin-bottom: 2rem;
   align-items: center;
-    justify-content: center;
+  justify-content: center;
 }
 
 .searchSelect {
@@ -57,18 +57,18 @@
 
 .searchButton {
   padding: 0.5rem 1rem;
-  background-color: #4f46e5;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   margin-left: 10px;
-    flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .searchButton:hover {
-  background-color: #4338ca;
+  background-color: var(--primary-dark);
 }
 
 .error {
@@ -128,8 +128,8 @@
 
 .editButton {
   background-color: #f3f4f6;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
+  color: var(--primary);
+  border: 1px solid var(--primary);
 }
 
 .editButton:hover {

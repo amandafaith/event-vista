@@ -1,172 +1,319 @@
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { vendorApi } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import "../../styles/components.css";
+import VendorForm from "./VendorForm";
+import VendorSearch from "./VendorSearch";
+import VendorSearchResults from "./VendorSearchResults";
+import Modal from "../../components/common/Modal/Modal";
+import Navigation from "../../components/common/Navigation/Navigation";
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
+const VendorPage = () => {
+    const [vendors, setVendors] = useState([]);
+    const [selectedVendor, setSelectedVendor] = useState(null);
+    const [showVendorForm, setShowVendorForm] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { isAuthenticated, token, logout } = useAuth();
+    const navigate = useNavigate();
 
-.header h1 {
-  font-size: 2rem;
-  color: #1f2937;
-}
+    // Search state
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchType, setSearchType] = useState("name");
+    const [searchResults, setSearchResults] = useState([]);
 
-.addButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
+    useEffect(() => {
+        if (!isAuthenticated || !token) {
+          navigate("/login");
+          return;
+        }
+        fetchVendors();
+    }, [isAuthenticated, token, navigate]);
 
-.addButton:hover {
-  background-color: #4338ca;
-}
+    const handleAuthError = async () => {
+        await logout();
+        navigate("/login");
+    };
 
-.searchContainer {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
+    const fetchVendors = async () => {
+        try {
+          setLoading(true);
+          const response = await vendorApi.getAllVendors();
+          setVendors(response.data || []);
+          setSearchResults(response.data || []);
+          setError(null);
+        } catch (err) {
+          console.error("Error fetching vendors:", err);
+          if (err.response?.status === 401 || err.response?.status === 403) {
+            await handleAuthError();
+          } else {
+            setError("Unable to load vendors. Please try again later.");
+          }
+        } finally {
+          setLoading(false);
+        }
+    };
 
-.searchSelect {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-}
+    const handleSearch = async () => {
+        if (!searchTerm.trim()) {
+          setSearchResults(vendors);
+          return;
+        }
 
-.searchInput {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
+        try {
+          let result;
+          console.log("Searching for:", searchTerm, "by type:", searchType);
 
-.searchButton {
-  padding: 0.5rem 1rem;
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin-left: 8px;
-}
+          switch (searchType) {
+            case "name":
+              result = await vendorApi.getVendorByName(searchTerm);
+              console.log("Name search result:", result);
+              break;
+            case "location":
+              result = await vendorApi.getVendorByLocation(searchTerm);
+              console.log("Location search result:", result);
+              break;
+            case "skills":
+                      result = await vendorApi.getVendorBySkillName(searchTerm);
+                      console.log("Skill search result:", result);
+                      break;
+            case "phone":
+              result = await vendorApi.getVendorByPhoneNumber(searchTerm);
+              console.log("Phone search result:", result);
+              break;
+            case "email":
+              result = await vendorApi.getVendorByEmail(searchTerm);
+              console.log("Email search result:", result);
+              break;
+            default:
+              result = [];
+          }
 
-.searchButton:hover {
-  background-color: #4338ca;
-}
+          // Extract data from response if it exists
+          if (result && result.data) {
+            const searchResults = Array.isArray(result.data)
+              ? result.data
+              : [result.data];
+            setSearchResults(searchResults.filter((item) => item !== null));
+          } else {
+            setSearchResults([]);
+          }
+        } catch (err) {
+          console.error("Error searching vendors:", err);
+          setSearchResults([]);
+        }
+    };
 
-.error {
-  padding: 1rem;
-  background-color: #fee2e2;
-  color: #ef4444;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
+    const handleAddVendor = () => {
+        if (!token) {
+          handleAuthError();
+          return;
+        }
+        setSelectedVendor(null);
+        setShowVendorForm(true);
+    };
 
-.loading,
-.noResults {
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-}
+    const handleEditVendor = (vendor) => {
+        if (!token) {
+        handleAuthError();
+        return;
+        }
 
-.vendorList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
+        // Normalize skill structure for Select component
+        const normalizedVendor = {
+        ...vendor,
+        notes: vendor.notes || "",
+          skills: Array.isArray(vendor.skills)
+            ? vendor.skills.map((skill) => ({
+                id: skill.id,
+                name: skill.name,
+                value: skill.id,
+                label: skill.name,
+              }))
+            : [],
+    };
 
-.vendorCard {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-}
+    setSelectedVendor(normalizedVendor);
+    setShowVendorForm(true);
+    };
 
-.vendorHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
+    const handleDeleteVendor = async (vendorId) => {
+        if (!token) {
+          handleAuthError();
+          return;
+        }
 
-.vendorHeader h2 {
-  font-size: 1.25rem;
-  color: #1f2937;
-  margin: 0;
-}
+        if (window.confirm("Are you sure you want to delete this vendor?")) {
+          try {
+            await vendorApi.deleteVendor(vendorId);
+            setVendors(vendors.filter((vendor) => vendor.id !== vendorId));
+            setSearchResults(searchResults.filter((vendor) => vendor.id !== vendorId));
+            setError(null);
+          } catch (err) {
+            console.error("Error deleting vendor:", err);
+            if (err.response?.status === 401 || err.response?.status === 403) {
+              await handleAuthError();
+            } else {
+              setError("Failed to delete vendor. Please try again later.");
+            }
+          }
+        }
+    };
 
-.vendorActions {
-  display: flex;
-  gap: 0.5rem;
-}
+    const handleVendorSubmit = async (vendorData) => {
+        if (!token) {
+        handleAuthError();
+        return;
+        }
 
-.editButton,
-.deleteButton {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+            // Normalize the vendor data to match the Select component structure for skills
+            const normalizeVendor = (vendor) => ({
+            ...vendor,
+              notes: vendor.notes || "",
+              skills: Array.isArray(vendor.skills)
+                ? vendor.skills.map((skill) => ({
+                    id: skill.id,
+                    name: skill.name,
+                    value: skill.id,
+                    label: skill.name,
+                  }))
+                : [],
+            });
 
-.editButton {
-  background-color: #f3f4f6;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
-}
+        try {
+        const payload = {
+          name: vendorData.name,
+          location: vendorData.location,
+          emailAddress: vendorData.emailAddress,
+          phoneNumber: vendorData.phoneNumber.phoneNumber,
+          notes: vendorData.notes || "",
+          skills: Array.isArray(vendorData.skills)
+            ? vendorData.skills
+                .filter((skill) => skill && (skill.value || skill.id)) // Ensure valid skills
+                .map((skill) => ({ id: skill.value ?? skill.id }))
+            : [],
+        };
 
-.editButton:hover {
-  background-color: #eef2ff;
-}
+            let response;
+            let normalizedVendor;
 
-.deleteButton {
-  background-color: #fee2e2;
-  color: #ef4444;
-  border: 1px solid #ef4444;
-}
+        if (selectedVendor) {
+          // Update existing vendor
+          response = await vendorApi.updateVendor(selectedVendor.id, payload, token);
+          normalizedVendor = normalizeVendor(response.data);
 
-.deleteButton:hover {
-  background-color: #fecaca;
-}
+          setVendors(
+            vendors.map((vendor) =>
+              vendor.id === selectedVendor.id ? normalizedVendor : vendor
+            )
+          );
+          setSearchResults(
+            searchResults.map((vendor) =>
+              vendor.id === selectedVendor.id ? normalizedVendor : vendor
+            )
+          );
+        } else {
+          // Create new vendor
+          response = await vendorApi.createVendor(payload, token);
+          normalizedVendor = normalizeVendor(response.data);
 
-.vendorDetails {
-  color: #4b5563;
-}
+          setVendors([...vendors, normalizedVendor]);
+          setSearchResults([...searchResults, normalizedVendor]);
+        }
 
-.vendorDetails p {
-  margin: 0.5rem 0;
-}
+            setShowVendorForm(false);
+            setSelectedVendor(null);
+            setError(null);
+        } catch (err) {
+            console.error("Error saving vendor:", err);
 
-.formModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
+            if (err.response?.status === 401 || err.response?.status === 403) {
+              await handleAuthError();
+            } else {
+              // Rethrow the error so VendorForm can handle and display it
+              throw err;
+            }
+        }
+    };
 
-.formContent {
-  background-color: white;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
+    const handleViewAll = () => {
+            setSearchTerm("");
+            setSearchType("name");
+            setSearchResults(vendors);
+    };
+
+    if (!isAuthenticated || !token) {
+        return null; // Will redirect in useEffect
+    }
+
+    if (loading) {
+        return (
+          <div className="loading-container">
+            <div className="loading-spinner">Loading...</div>
+          </div>
+        );
+    }
+
+    return (
+        <div className="page-container">
+            <Navigation />
+            <div className="content-container">
+                <div className="dashboard-header">
+                    <h2 className="dashboard-title">Vendors</h2>
+                    <p className="dashboard-subtitle">Manage your event vendors</p>
+
+                    <VendorSearch
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        searchType={searchType}
+                        setSearchType={setSearchType}
+                        onSearch={handleSearch}
+                    />
+
+                    <button
+                        className="button button-primary"
+                        onClick={handleAddVendor}
+                        style={{ marginTop: "1rem" }}
+                    >
+                        Add New Vendor
+                    </button>
+                    <button
+                        className="button button-secondary"
+                        onClick={handleViewAll}
+                        style={{ marginTop: "1rem", marginLeft: "1rem" }}
+                    >
+                        View All
+                    </button>
+                </div>
+
+                {error && (
+                    <div className="error-message" style={{ marginBottom: "1rem" }}>
+                        {error}
+                    </div>
+                )}
+
+                <VendorSearchResults
+                    vendors={searchResults}
+                    onEdit={handleEditVendor}
+                    onDelete={handleDeleteVendor}
+                />
+
+                {showVendorForm && (
+                    <Modal onClose={() => setShowVendorForm(false)}>
+                        <VendorForm
+                            initialData={selectedVendor}
+                            onSubmit={handleVendorSubmit}
+                            onCancel={() => {
+                                setShowVendorForm(false);
+                                setSelectedVendor(null);
+                            }}
+                        />
+                    </Modal>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default VendorPage;

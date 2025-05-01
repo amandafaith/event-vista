@@ -6,7 +6,7 @@ import UpcomingEvents from "../../components/UpcomingEvents/UpcomingEvents";
 import { eventApi } from "../../services/api";
 import "../../styles/components.css";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import Navigation from "../../components/common/Navigation/Navigation";
 
 const Dashboard = () => {
   const { user, logout, token } = useAuth();
@@ -19,7 +19,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const redirectToUserProfile = () => {
-    navigate("/profile"); // Redirect to user profile page
+    navigate("/profile");
   };
 
   useEffect(() => {
@@ -63,15 +63,9 @@ const Dashboard = () => {
     setShowEventForm(false);
   };
 
-  const handleEventUpdated = async () => {
-    try {
-      await fetchEvents();
-      setSuccessMessage("Event updated successfully!");
-      setEventUpdateCount((prev) => prev + 1);
-    } catch (err) {
-      console.error("Error updating events:", err);
-      setError("Failed to update events. Please try again.");
-    }
+  const handleEventUpdated = () => {
+    fetchEvents();
+    setEventUpdateCount((prev) => prev + 1);
   };
 
   if (loading) {
@@ -97,67 +91,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div
-      className="dashboard-layout"
-      style={{ display: "flex", minHeight: "100vh" }}
-    >
-      {/* Left Sidebar */}
-      <Sidebar />
-      {/* Main Content */}
-      <div
-        className="dashboard-container"
-        style={{
-          marginLeft: "200px", // same as sidebar width
-          padding: "1rem",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <nav className="card">
-          <div className="container">
-            <div
-              className="flex"
-              style={{
-                justifyContent: "space-between",
-                alignItems: "center",
-                height: "4rem",
-              }}
-            >
-              <div className="flex" style={{ alignItems: "center" }}>
-                <h1 className="card-title">Event Vista</h1>
-              </div>
-              <div
-                className="flex"
-                style={{ alignItems: "center", gap: "1rem" }}
-              >
-                <span className="card-content">
-                  Welcome, {user?.name || "User"}
-                </span>
-                <img
-                  src={user.pictureUrl}
-                  alt="Profile"
-                  className="dashboard-profile-pic"
-                />
-                <button
-                  onClick={redirectToUserProfile}
-                  className="button button-primary"
-                >
-                  Profile
-                </button>
-                <button
-                  onClick={handleAddEvent}
-                  className="button button-primary"
-                >
-                  Add Event
-                </button>
-                <button onClick={logout} className="button button-secondary">
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
+    <div className="dashboard-layout">
+      <Navigation />
+      <div className="dashboard-container">
         <div className="dashboard-content">
           {successMessage && (
             <div className="success-message" style={{ margin: "1rem 0" }}>
@@ -169,8 +105,18 @@ const Dashboard = () => {
               {error}
             </div>
           )}
-          <Calendar events={events} onEventUpdated={handleEventUpdated} />
-          <UpcomingEvents refreshTrigger={eventUpdateCount} />
+          <div className="dashboard-grid">
+            <div className="calendar-section">
+              <Calendar
+                events={events}
+                onEventUpdated={handleEventUpdated}
+                onAddEvent={handleAddEvent}
+              />
+            </div>
+            <div className="upcoming-events-section">
+              <UpcomingEvents refreshTrigger={eventUpdateCount} />
+            </div>
+          </div>
         </div>
 
         {showEventForm && (

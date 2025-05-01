@@ -21,6 +21,12 @@
   box-shadow: var(--shadow-sm);
 }
 
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .navigation {
   display: flex;
   align-items: center;
@@ -73,6 +79,55 @@
 .viewControls button.active {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.addEventButton {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius-md);
+  color: var(--text-light);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.addEventButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.addEventButton::before {
+  content: "+";
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .headerControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .viewControls {
+    flex-wrap: wrap;
+  }
+
+  .viewControls button,
+  .addEventButton {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
 }
 
 /* Calendar Grid Layout */
