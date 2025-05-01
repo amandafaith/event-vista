@@ -49,9 +49,11 @@
 }
 
 .modalHeader {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
+  border-top: none;
+  padding-top: 0;
 }
 
 .modalTitle {
@@ -73,24 +75,28 @@
   flex-direction: column;
   gap: 1.5rem;
   flex: 1;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .eventDetails {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .75rem;
   background: transparent;
-  margin-top: -0.5rem;
+  margin: 0;
 }
 
-.eventDetails h2 {
-  font-size: 1.25rem;
+.eventDetails h4 {
+  display: inline;
+  font-size: 1rem;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-right: 0.5rem;
   background: transparent;
 }
 
 .eventDetails p {
+  display: inline;
   margin: 0;
   line-height: 1.5;
   background: transparent;
@@ -278,11 +284,11 @@
 
 .deleteButton {
   composes: button;
-  background-color: var(--error) !important;
+  background-color: var(--accent-1) !important;
 }
 
 .deleteButton:hover {
-  background-color: var(--error-dark) !important;
+  background-color: var(--accent-1-dark) !important;
 }
 
 .selectedVendors {

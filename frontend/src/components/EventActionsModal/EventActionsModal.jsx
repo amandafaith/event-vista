@@ -133,61 +133,12 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  const renderViewMode = () => (
-    <div className={styles.viewMode}>
-      <div className={styles.eventDetails}>
-        <h2>{event.name}</h2>
-        <p>
-          <strong>Date:</strong> {event.date}
-        </p>
-        <p>
-          <strong>Time:</strong> {formatTime(event.time)}
-        </p>
-        {event.venue && (
-          <p>
-            <strong>Venue:</strong> 📍 {event.venue.name}
-          </p>
-        )}
-        {event.vendors && event.vendors.length > 0 && (
-          <p>
-            <strong>Vendors:</strong> 👥{" "}
-            {event.vendors.map((v) => v.name).join(", ")}
-          </p>
-        )}
-        {event.notes && (
-          <p>
-            <strong>Notes:</strong> {event.notes}
-          </p>
-        )}
-      </div>
-      <div className={styles.buttonGroup}>
-        <button
-          type="button"
-          className={styles.submitButton}
-          onClick={() => setAction("edit")}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className={styles.submitButton}
-          onClick={() => setAction("rebook")}
-        >
-          Rebook
-        </button>
-        <button
-          type="button"
-          className={styles.deleteButton}
-          onClick={handleDelete}
-        >
-          Delete
-        </button>
-        <button type="button" className={styles.cancelButton} onClick={onClose}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
+  // Add function to format date as mm/dd/yyyy
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${month}/${day}/${year}`;
+  };
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className={styles.form}>
@@ -324,15 +275,8 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
               ? "Edit Event"
               : action === "rebook"
               ? "Rebook Event"
-              : ""}
+              : event.name}
           </h2>
-          <p className={styles.modalSubtitle}>
-            {action === "edit"
-              ? "Update the event details below"
-              : action === "rebook"
-              ? "Enter new details for the rebooked event"
-              : ""}
-          </p>
         </div>
 
         {error && <div className={styles.error}>{error}</div>}
@@ -340,7 +284,66 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
           <div className={styles.success}>{successMessage}</div>
         )}
 
-        {action === "view" ? renderViewMode() : renderForm()}
+        {action === "view" ? (
+          <div className={styles.viewMode}>
+            <div className={styles.eventDetails}>
+              <p>
+                <h4>Date:</h4> {formatDate(event.date)}
+              </p>
+              <p>
+                <h4>Time:</h4> {formatTime(event.time)}
+              </p>
+              {event.venue && (
+                <p>
+                  <h4>Venue:</h4> 📍 {event.venue.name}
+                </p>
+              )}
+              {event.vendors && event.vendors.length > 0 && (
+                <p>
+                  <h4>Vendors:</h4> 👥{" "}
+                  {event.vendors.map((v) => v.name).join(", ")}
+                </p>
+              )}
+              {event.notes && (
+                <p>
+                  <h4>Notes:</h4> {event.notes}
+                </p>
+              )}
+            </div>
+            <div className={styles.buttonGroup}>
+              <button
+                type="button"
+                className={styles.submitButton}
+                onClick={() => setAction("edit")}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className={styles.submitButton}
+                onClick={() => setAction("rebook")}
+              >
+                Rebook
+              </button>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className={styles.cancelButton}
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          renderForm()
+        )}
       </div>
     </Modal>
   );
