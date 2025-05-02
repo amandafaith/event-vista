@@ -32,14 +32,14 @@ public class EventService {
         this.weatherService = weatherService;
     }
 
-// Retrieves all events associated with a specific user.
+    // Retrieves all events associated with a specific user.
 // Returns List of events belonging to the user, may be empty if no events exist
     public List<Event> findAllEvents(User user) {
         return eventRepository.findAllByUser(user);
     }
 
 
-// Retrieves a specific event by its ID for a given user.
+    // Retrieves a specific event by its ID for a given user.
 // Returns The event if found
 // throws EventNotFoundException if the event doesn't exist or doesn't belong to the user
     public Event findEventById(Integer id, User user) {
@@ -48,7 +48,7 @@ public class EventService {
     }
 
 
-// Retrieves a specific event by its name for a given user.
+    // Retrieves a specific event by its name for a given user.
 // Returns The event if found
 // Throws EventNotFoundException if the event doesn't exist or doesn't belong to the user
     public Event findEventByName(String name, User user) {
@@ -57,28 +57,28 @@ public class EventService {
     }
 
 
-// Retrieves all events associated with a specific venue
+    // Retrieves all events associated with a specific venue
 // Returns List of events for the venue, may be empty if no events exist
     public List<Event> findEventsByVenue(Integer venueId, User user) {
         return eventRepository.findByVenueIdAndUser(venueId, user);
     }
 
 
-// Retrieves all events associated with a specific client
+    // Retrieves all events associated with a specific client
 // Returns List of events for the client, may be empty if no events exist
     public List<Event> findEventsByClient(Integer clientId, User user) {
         return eventRepository.findByClientIdAndUser(clientId, user);
     }
 
 
-// Retrieves all events associated with a specific vendor
+    // Retrieves all events associated with a specific vendor
 // Returns List of events for the vendor, may be empty if no events exist
     public List<Event> findEventsByVendor(Integer vendorId, User user) {
         return eventRepository.findByVendorsIdAndUser(vendorId, user);
     }
 
 
-// Creates a new event for a given user.
+    // Creates a new event for a given user.
 // Validates the event data and sets up necessary relationships.
 // Throws InvalidEventDataException if the event data is invalid
     @Transactional
@@ -104,42 +104,42 @@ public class EventService {
     }
 
 
-// Updates an existing event for a given user.
+    // Updates an existing event for a given user.
 // Validates the event data and updates all relevant fields.
 // Returns The updated event
 // Throws EventNotFoundException if the event doesn't exist or doesn't belong to the user
 // Throws InvalidEventDataException if the event data is invalid
-@Transactional
-public Event updateEvent(Integer id, Event updatedEvent, User user) {
-    validateEventData(updatedEvent);
+    @Transactional
+    public Event updateEvent(Integer id, Event updatedEvent, User user) {
+        validateEventData(updatedEvent);
 
-    return eventRepository.findByIdAndUser(id, user)
-            .map(existingEvent -> {
-                // Update basic fields
-                existingEvent.setName(updatedEvent.getName());
-                existingEvent.setDate(updatedEvent.getDate());
-                existingEvent.setTime(updatedEvent.getTime());
-                existingEvent.setNotes(updatedEvent.getNotes());
+        return eventRepository.findByIdAndUser(id, user)
+                .map(existingEvent -> {
+                    // Update basic fields
+                    existingEvent.setName(updatedEvent.getName());
+                    existingEvent.setDate(updatedEvent.getDate());
+                    existingEvent.setTime(updatedEvent.getTime());
+                    existingEvent.setNotes(updatedEvent.getNotes());
 
-                // Handle venue relationship
-                if (updatedEvent.getVenue() != null && updatedEvent.getVenue().getId() != null) {
-                    venueService.findVenueById(updatedEvent.getVenue().getId(), user)
-                            .ifPresent(existingEvent::setVenue);
-                }
+                    // Handle venue relationship
+                    if (updatedEvent.getVenue() != null && updatedEvent.getVenue().getId() != null) {
+                        venueService.findVenueById(updatedEvent.getVenue().getId(), user)
+                                .ifPresent(existingEvent::setVenue);
+                    }
 
-                // Handle vendors relationship
-                if (updatedEvent.getVendors() != null) {
-                    existingEvent.setVendors(new ArrayList<>(updatedEvent.getVendors()));
-                }
+                    // Handle vendors relationship
+                    if (updatedEvent.getVendors() != null) {
+                        existingEvent.setVendors(new ArrayList<>(updatedEvent.getVendors()));
+                    }
 
-                // Calendar relationship remains unchanged as it's tied to the user
-                return eventRepository.save(existingEvent);
-            })
-            .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
-}
+                    // Calendar relationship remains unchanged as it's tied to the user
+                    return eventRepository.save(existingEvent);
+                })
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
+    }
 
 
-// Deletes an event
+    // Deletes an event
 // Throws EventNotFoundException if the event doesn't exist or doesn't belong to the user
     @Transactional
     public void deleteEvent(Integer id, User user) {
@@ -149,7 +149,7 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
     }
 
 
-// Retrieves all upcoming events for a given user.
+    // Retrieves all upcoming events for a given user.
 // Events are considered upcoming if their date and time are in the future.
 // Return List of upcoming events, may be empty if no upcoming events exist
     public List<Event> findUpcomingEventsByUser(User user) {
@@ -159,7 +159,7 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
     }
 
 
-// Rebooks an existing event with new details
+    // Rebooks an existing event with new details
 // Creates a new event based on the original event's data and updates it with new details.
 // Returns The rebooked event
 // Throws EventNotFoundException if the original event doesn't exist
@@ -221,6 +221,15 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
         return eventRepository.save(newEvent);
     }
 
+    private int compareEventsByDateTime(Event e1, Event e2) {
+        // First compare dates
+        int dateComparison = e1.getDate().compareTo(e2.getDate());
+        if (dateComparison != 0) {
+            return dateComparison;
+        }
+        // If dates are equal, compare times
+        return e1.getTime().compareTo(e2.getTime());
+    }
 
     // Retrieves all upcoming events with weather information for a given user.
     // For each event, fetches weather data for the event's location and date.
@@ -233,10 +242,21 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
         // Get events between today and 5 days from now
         List<Event> events = eventRepository.findByDateBetweenAndUser(currentDate, fiveDaysFromNow, user);
 
+        // Sort events by date and time
+        events.sort(this::compareEventsByDateTime);
+
+        // Convert to DTOs with weather data
         return events.stream()
                 .map(event -> {
-                    String location = event.getVenue() != null ? event.getVenue().getLocation() : "No venue set";
-                    WeatherData weatherData = weatherService.getWeatherData(location, event.getDate());
+                    WeatherData weatherData = null;
+                    try {
+                        weatherData = weatherService.getWeatherData(
+                                event.getVenue() != null ? event.getVenue().getLocation() : null,
+                                event.getDate()
+                        );
+                    } catch (Exception e) {
+                        // Silently handle weather data errors
+                    }
                     return new UpcomingEventDTO(event, weatherData);
                 })
                 .collect(Collectors.toList());
@@ -248,7 +268,7 @@ public Event updateEvent(Integer id, Event updatedEvent, User user) {
         return eventRepository.findByDateBetweenAndUser(date, date, user);
     }
 
-    // Retrives all events for a specific date range
+    // Retrieves all events for a specific date range
     // Returns list of events within the date range, may be empty if no events exist
     public List<Event> findEventsByDateRange(LocalDate startDate, LocalDate endDate, User user) {
         return eventRepository.findByDateBetweenAndUser(startDate, endDate, user);

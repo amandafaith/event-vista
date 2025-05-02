@@ -26,29 +26,6 @@ const getWeatherIcon = (icon) => {
   return iconMap[icon] || "/animated/day.svg";
 };
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString + "T00:00:00");
-  const options = {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  };
-  return date
-    .toLocaleDateString("en-US", options)
-    .replace(/,/g, "")
-    .replace(/\s+/g, " ");
-};
-
-const formatTime = (timeStr) => {
-  if (!timeStr) return "";
-  const [hours, minutes] = timeStr.split(":");
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${minutes} ${ampm}`;
-};
-
 const UpcomingEvents = ({ refreshTrigger }) => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,18 +73,12 @@ const UpcomingEvents = ({ refreshTrigger }) => {
           <div key={event.id} className={styles.eventCard}>
             <div className={styles.eventContent}>
               <div className={styles.eventName}>{event.name}</div>
-              <div className={styles.eventDate}>
-                📅 {formatDate(event.date)}
-              </div>
-              <div className={styles.eventTime}>
-                🕒 {formatTime(event.time)}
-              </div>
-              <div className={styles.eventLocation}>
-                {event.venueName || "No venue set"}
-              </div>
-              {event.vendors && event.vendors.length > 0 && (
+              <div className={styles.eventDate}>📅 {event.formattedDate}</div>
+              <div className={styles.eventTime}>🕒 {event.formattedTime}</div>
+              <div className={styles.eventLocation}>{event.venueName}</div>
+              {event.formattedVendorNames && (
                 <div className={styles.eventVendors}>
-                  {event.vendors.map((vendor) => vendor.name).join(", ")}
+                  {event.formattedVendorNames}
                 </div>
               )}
               {event.client && (
@@ -121,14 +92,7 @@ const UpcomingEvents = ({ refreshTrigger }) => {
                   alt={event.weatherData.description}
                   className={styles.weatherIcon}
                 />
-                <div className={styles.weatherInfo}>
-                  {event.weatherData.description}
-                  <br />
-                  {event.weatherData.temperature}
-                  {event.date === new Date().toISOString().split("T")[0]
-                    ? " (Current)"
-                    : " (Forecast)"}
-                </div>
+                <div className={styles.weatherInfo}>{event.weatherDisplay}</div>
               </div>
             ) : (
               <div className={styles.weatherSection}>
