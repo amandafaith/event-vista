@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { venueApi } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import "../../styles/components.css";
 import VenueForm from "./VenueForm";
 import VenueSearch from "./VenueSearch";
 import VenueSearchResults from "./VenueSearchResults";
 import Modal from "../../components/common/Modal/Modal";
 import Navigation from "../../components/common/Navigation/Navigation";
+import styles from "./VenuePage.module.css";
 
 const VenuePage = () => {
   const [venues, setVenues] = useState([]);
@@ -176,21 +176,21 @@ const VenuePage = () => {
       setSelectedVenue(null);
       setError(null);
     } catch (err) {
-          console.error("Error saving venue:", err);
+      console.error("Error saving venue:", err);
 
-          if (err.response?.status === 401 || err.response?.status === 403) {
-            await handleAuthError();
-          } else {
-            // Rethrow the error so VenueForm can handle and display it
-            throw err;
-          }
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        await handleAuthError();
+      } else {
+        // Rethrow the error so VenueForm can handle and display it
+        throw err;
       }
+    }
   };
 
   const handleViewAll = () => {
-      setSearchTerm("");
-      setSearchType("name");
-      setSearchResults(venues);
+    setSearchTerm("");
+    setSearchType("name");
+    setSearchResults(venues);
   };
 
   if (!isAuthenticated || !token) {
@@ -199,20 +199,23 @@ const VenuePage = () => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">Loading...</div>
+      <div className={styles.loading}>
+        <div className={styles.loadingSpinner}></div>
+        <p>Loading venues...</p>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
+    <div className={styles.container}>
       <Navigation />
-      <div className="content-container">
-        <div className="dashboard-header">
-          <h2 className="dashboard-title">Venues</h2>
-          <p className="dashboard-subtitle">Manage your event venues</p>
+      <div className={styles.contentContainer}>
+        <div className={styles.header}>
+          <h1>Venues</h1>
+          <p>Manage your event venues and locations</p>
+        </div>
 
+        <div className={styles.actionsContainer}>
           <VenueSearch
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -221,24 +224,19 @@ const VenuePage = () => {
             onSearch={handleSearch}
           />
 
-          <button
-            className="button button-primary"
-            onClick={handleAddVenue}
-            style={{ marginTop: "1rem" }}
-          >
-            Add New Venue
-          </button>
-          <button
-            className="button button-secondary"
-            onClick={handleViewAll}
-            style={{ marginTop: "1rem", marginLeft: "1rem" }}
-          >
-            View All
-          </button>
+          <div className={styles.actionButtons}>
+            <button className={styles.viewAllButton} onClick={handleViewAll}>
+              View All
+            </button>
+            <button className={styles.addButton} onClick={handleAddVenue}>
+              Add New Venue
+            </button>
+          </div>
         </div>
 
         {error && (
-          <div className="error-message" style={{ marginBottom: "1rem" }}>
+          <div className={styles.error}>
+            <span>⚠️</span>
             {error}
           </div>
         )}
@@ -250,11 +248,19 @@ const VenuePage = () => {
         />
 
         {showVenueForm && (
-          <Modal onClose={() => setShowVenueForm(false)}>
+          <Modal
+            onClose={() => {
+              setShowVenueForm(false);
+              setSelectedVenue(null);
+            }}
+          >
             <VenueForm
               initialData={selectedVenue}
               onSubmit={handleVenueSubmit}
-              onCancel={() => setShowVenueForm(false)}
+              onCancel={() => {
+                setShowVenueForm(false);
+                setSelectedVenue(null);
+              }}
             />
           </Modal>
         )}

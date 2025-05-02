@@ -1,5 +1,5 @@
 import React from "react";
-import "../../styles/components.css";
+import styles from "./VendorPage.module.css";
 
 const VendorSearch = ({
   searchTerm,
@@ -15,40 +15,12 @@ const VendorSearch = ({
   };
 
   return (
-    <div
-      className="search-container"
-      style={{
-        display: "flex",
-        gap: "0.5rem",
-        marginBottom: "1.5rem",
-        maxWidth: "800px",
-        width: "100%",
-      }}
-    >
-      <div
-        className="search-type-selector"
-        style={{
-          position: "relative",
-          minWidth: "120px",
-        }}
-      >
+    <div className={styles.searchContainer}>
+      <div className={styles.searchTypeSelector}>
         <select
           value={searchType}
           onChange={(e) => setSearchType(e.target.value)}
-          className="search-select"
-          style={{
-            appearance: "none",
-            backgroundColor: "var(--background-color)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "6px",
-            padding: "0.75rem 1rem",
-            fontSize: "0.9rem",
-            color: "var(--text-color)",
-            cursor: "pointer",
-            width: "100%",
-            outline: "none",
-            transition: "border-color 0.2s ease",
-          }}
+          className={styles.searchSelect}
         >
           <option value="name">Name</option>
           <option value="location">Location</option>
@@ -56,56 +28,19 @@ const VendorSearch = ({
           <option value="phone">Phone</option>
           <option value="email">Email</option>
         </select>
-        <div
-          style={{
-            position: "absolute",
-            right: "1rem",
-            top: "50%",
-            transform: "translateY(-50%)",
-            pointerEvents: "none",
-            color: "var(--text-secondary)",
-          }}
-        >
-          ▼
-        </div>
+        <div className={styles.selectArrow}>▼</div>
       </div>
 
-      <div
-        className="search-input-wrapper"
-        style={{
-          flex: 1,
-          position: "relative",
-        }}
-      >
+      <div className={styles.searchInputWrapper}>
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder={`Search by ${searchType}...`}
-          className="search-input"
-          style={{
-            width: "100%",
-            padding: "0.75rem 1rem",
-            paddingLeft: "2.5rem",
-            fontSize: "0.9rem",
-            border: "1px solid var(--border-color)",
-            borderRadius: "6px",
-            backgroundColor: "var(--background-color)",
-            color: "var(--text-color)",
-            outline: "none",
-            transition: "border-color 0.2s ease",
-          }}
+          className={styles.searchInput}
         />
-        <div
-          style={{
-            position: "absolute",
-            left: "1rem",
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <div className={styles.searchIcon}>
           <svg
             width="16"
             height="16"
@@ -131,7 +66,7 @@ const VendorSearch = ({
         </div>
       </div>
 
-      <button onClick={onSearch} className="search-button">
+      <button onClick={onSearch} className={styles.searchButton}>
         <svg
           width="16"
           height="16"

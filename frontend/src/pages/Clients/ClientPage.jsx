@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { clientApi } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import "../../styles/components.css";
 import ClientForm from "./ClientForm";
 import ClientSearch from "./ClientSearch";
 import ClientSearchResults from "./ClientSearchResults";
 import Modal from "../../components/common/Modal/Modal";
 import Navigation from "../../components/common/Navigation/Navigation";
+import styles from "./ClientPage.module.css";
 
 const ClientPage = () => {
   const [clients, setClients] = useState([]);
@@ -63,26 +63,20 @@ const ClientPage = () => {
 
     try {
       let response;
-      console.log("Searching for:", searchTerm, "by type:", searchType);
-
       switch (searchType) {
         case "name":
           response = await clientApi.getClientByName(searchTerm);
-          console.log("Name search result:", response);
           break;
         case "phone":
           response = await clientApi.getClientByPhoneNumber(searchTerm);
-          console.log("Phone search result:", response);
           break;
         case "email":
           response = await clientApi.getClientByEmail(searchTerm);
-          console.log("Email search result:", response);
           break;
         default:
           response = { data: [] };
       }
 
-      // Handle the response data
       let searchResults = [];
       if (response && response.data) {
         searchResults = Array.isArray(response.data)
@@ -90,7 +84,6 @@ const ClientPage = () => {
           : [response.data];
       }
 
-      console.log("Final search results:", searchResults);
       setSearchResults(searchResults.filter((item) => item !== null));
     } catch (err) {
       console.error("Error searching clients:", err);
@@ -183,26 +176,34 @@ const ClientPage = () => {
     }
   };
 
+  const handleViewAll = () => {
+    setSearchTerm("");
+    setSearchType("name");
+    setSearchResults(clients);
+  };
+
   if (!isAuthenticated || !token) {
     return null; // Will redirect in useEffect
   }
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">Loading...</div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
+    <div className={styles.container}>
       <Navigation />
-      <div className="content-container">
-        <div className="dashboard-header">
-          <h2 className="dashboard-title">Clients</h2>
-          <p className="dashboard-subtitle">Manage your clients</p>
+      <div className={styles.contentContainer}>
+        <div className={styles.header}>
+          <h1>Clients</h1>
+          <p>Manage your event clients</p>
+        </div>
 
+        <div className={styles.actionsContainer}>
           <ClientSearch
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -211,17 +212,19 @@ const ClientPage = () => {
             onSearch={handleSearch}
           />
 
-          <button
-            className="button button-primary"
-            onClick={handleAddClient}
-            style={{ marginTop: "1rem" }}
-          >
-            Add New Client
-          </button>
+          <div className={styles.actionButtons}>
+            <button className={styles.viewAllButton} onClick={handleViewAll}>
+              View All
+            </button>
+            <button className={styles.addButton} onClick={handleAddClient}>
+              Add New Client
+            </button>
+          </div>
         </div>
 
         {error && (
-          <div className="error-message" style={{ marginBottom: "1rem" }}>
+          <div className={styles.error}>
+            <span>⚠️</span>
             {error}
           </div>
         )}
@@ -233,11 +236,19 @@ const ClientPage = () => {
         />
 
         {showClientForm && (
-          <Modal onClose={() => setShowClientForm(false)}>
+          <Modal
+            onClose={() => {
+              setShowClientForm(false);
+              setSelectedClient(null);
+            }}
+          >
             <ClientForm
               initialData={selectedClient}
               onSubmit={handleClientSubmit}
-              onCancel={() => setShowClientForm(false)}
+              onCancel={() => {
+                setShowClientForm(false);
+                setSelectedClient(null);
+              }}
             />
           </Modal>
         )}
