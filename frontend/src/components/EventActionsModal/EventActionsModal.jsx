@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { eventApi, venueApi, vendorApi } from "../../services/api";
+import { eventApi, venueApi, vendorApi, clientApi } from "../../services/api";
 import Modal from "../common/Modal/Modal";
 import styles from "./EventActionsModal.module.css";
 
@@ -10,6 +10,7 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
     date: event.date || "",
     time: event.time || "",
     venue: event.venue || null,
+    client: event.client || null,
     vendors: event.vendors || [],
     notes: event.notes || "",
   });
@@ -18,17 +19,21 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [venues, setVenues] = useState([]);
   const [vendors, setVendors] = useState([]);
+  const [clients, setClients] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [venuesResponse, vendorsResponse] = await Promise.all([
-          venueApi.getAllVenues(),
-          vendorApi.getAllVendors(),
-        ]);
+        const [venuesResponse, vendorsResponse, clientsResponse] =
+          await Promise.all([
+            venueApi.getAllVenues(),
+            vendorApi.getAllVendors(),
+            clientApi.getAllClients(),
+          ]);
         setVenues(venuesResponse.data || []);
         setVendors(vendorsResponse.data || []);
+        setClients(clientsResponse.data || []);
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -52,6 +57,14 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
     setFormData((prev) => ({
       ...prev,
       venue: venueId ? { id: parseInt(venueId) } : null,
+    }));
+  };
+
+  const handleClientChange = (e) => {
+    const clientId = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      client: clientId ? { id: parseInt(clientId) } : null,
     }));
   };
 
@@ -233,6 +246,23 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
       </div>
 
       <div className={styles.formGroup}>
+        <label className={styles.label}>Client</label>
+        <select
+          name="client"
+          value={formData.client?.id || ""}
+          onChange={handleClientChange}
+          className={styles.input}
+        >
+          <option value="">Select a client</option>
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles.formGroup}>
         <label className={styles.label}>Notes</label>
         <textarea
           name="notes"
@@ -302,6 +332,11 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
                 <p>
                   <h4>Vendors:</h4> 👥{" "}
                   {event.vendors.map((v) => v.name).join(", ")}
+                </p>
+              )}
+              {event.client && (
+                <p>
+                  <h4>Client:</h4> 🤝 {event.client.name}
                 </p>
               )}
               {event.notes && (

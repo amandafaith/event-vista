@@ -1,5 +1,9 @@
 .upcomingEvents {
-  background: linear-gradient(to bottom right, var(--primary-light-2), var(--primary-light));
+  background: linear-gradient(
+    to bottom right,
+    var(--primary-light-2),
+    var(--primary-light)
+  );
   border-radius: var(--border-radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
@@ -14,8 +18,7 @@
   background: rgba(255, 255, 255, 0.2);
   padding: 1rem;
   border-radius: var(--border-radius-md);
-  border: .5px solid var(--border-color);
-
+  border: 0.5px solid var(--border-color);
 }
 
 /*
@@ -38,7 +41,10 @@
   border-radius: var(--border-radius-md);
   padding: 1rem;
   transition: all 0.2s ease;
-  border: .5px solid var(--border-color);
+  border: 0.5px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .eventCard:hover {
@@ -47,10 +53,39 @@
   border-color: var(--primary-light);
 }
 
+.eventContent {
+  flex: 1;
+  margin-right: 1.5rem;
+}
+
+.weatherSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
+}
+
+.weatherIcon {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.weatherInfo {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
 .eventDate {
   font-weight: 600;
   color: var(--text-light);
   margin-bottom: 0.5rem;
+  white-space: nowrap;
 }
 
 .eventName {
@@ -75,6 +110,13 @@
   font-size: 0.9rem;
 }
 
+.eventTime {
+  font-weight: 500;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
 .loading,
 .error,
 .empty {
@@ -87,9 +129,23 @@
   margin: 0.5rem 0;
   font-size: 0.9rem;
   color: var(--text-light);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .eventVendors::before {
   content: "👥";
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.eventClient {
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+}
+
+.eventClient::before {
+  content: "🤝";
   margin-right: 0.5rem;
 }

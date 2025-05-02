@@ -82,7 +82,7 @@
 .eventDetails {
   display: flex;
   flex-direction: column;
-  gap: .75rem;
+  gap: 0.75rem;
   background: transparent;
   margin: 0;
 }
@@ -202,7 +202,7 @@
 .input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary-light);
 }
 
 .textarea {
@@ -220,7 +220,7 @@
 .textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary-light);
 }
 
 .error {

@@ -35,10 +35,17 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
           0
         );
 
+        console.log("Fetching events for date range:", {
+          startDate: firstDay.toISOString().split("T")[0],
+          endDate: lastDay.toISOString().split("T")[0],
+        });
+
         const response = await eventApi.getEventsByDateRange(
           firstDay.toISOString().split("T")[0],
           lastDay.toISOString().split("T")[0]
         );
+
+        console.log("API Response:", response);
 
         // Create a new eventsByDate object without the current month's events
         const newEventsByDate = Object.keys(eventsByDate).reduce(
@@ -52,20 +59,30 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
         );
 
         // Add the new events
-        response.data.forEach((event) => {
-          const dateStr = event.date;
-          if (!newEventsByDate[dateStr]) {
-            newEventsByDate[dateStr] = [];
+        if (response && response.data) {
+          console.log("Response data:", response.data);
+          if (Array.isArray(response.data)) {
+            response.data.forEach((event) => {
+              const dateStr = event.date;
+              if (!newEventsByDate[dateStr]) {
+                newEventsByDate[dateStr] = [];
+              }
+              // Check if the event is already in the array
+              const isDuplicate = newEventsByDate[dateStr].some(
+                (e) => e.id === event.id
+              );
+              if (!isDuplicate) {
+                newEventsByDate[dateStr].push(event);
+              }
+            });
+          } else {
+            console.warn("Response data is not an array:", response.data);
           }
-          // Check if the event is already in the array
-          const isDuplicate = newEventsByDate[dateStr].some(
-            (e) => e.id === event.id
-          );
-          if (!isDuplicate) {
-            newEventsByDate[dateStr].push(event);
-          }
-        });
+        } else {
+          console.warn("No response data received from API");
+        }
 
+        console.log("Updated eventsByDate:", newEventsByDate);
         setEventsByDate(newEventsByDate);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -278,8 +295,8 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
                 className={styles.calendarEvent}
                 onClick={() => handleEventClick(event)}
                 title={`${formatTime(event.time)} - ${event.name}${
-                  event.venue ? " at " + event.venue.name : ""
-                }${
+                  event.client ? "\nClient: " + event.client.name : ""
+                }${event.venue ? " at " + event.venue.name : ""}${
                   event.vendors && event.vendors.length > 0
                     ? "\nVendors: " +
                       event.vendors.map((v) => v.name).join(", ")
@@ -294,6 +311,11 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
                 {event.vendors && event.vendors.length > 0 && (
                   <div className={styles.eventVendors}>
                     👥 {event.vendors.map((v) => v.name).join(", ")}
+                  </div>
+                )}
+                {event.client && (
+                  <div className={styles.eventClient}>
+                    🤝 {event.client.name}
                   </div>
                 )}
               </div>
@@ -359,6 +381,11 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
                     {event.vendors && event.vendors.length > 0 && (
                       <div className={styles.weekEventVendors}>
                         👥 {event.vendors.map((v) => v.name).join(", ")}
+                      </div>
+                    )}
+                    {event.client && (
+                      <div className={styles.weekEventClient}>
+                        🤝 {event.client.name}
                       </div>
                     )}
                     {event.notes && (
@@ -427,6 +454,11 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
                       {event.vendors && event.vendors.length > 0 && (
                         <div className={styles.weekEventVendors}>
                           👥 {event.vendors.map((v) => v.name).join(", ")}
+                        </div>
+                      )}
+                      {event.client && (
+                        <div className={styles.weekEventClient}>
+                          🤝 {event.client.name}
                         </div>
                       )}
                       {event.notes && (

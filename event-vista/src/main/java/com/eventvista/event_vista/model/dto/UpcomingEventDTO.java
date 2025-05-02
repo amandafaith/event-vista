@@ -2,6 +2,7 @@ package com.eventvista.event_vista.model.dto;
 
 import com.eventvista.event_vista.model.Event;
 import com.eventvista.event_vista.model.Vendor;
+import com.eventvista.event_vista.model.Client;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ public class UpcomingEventDTO {
     private String venueName;
     private WeatherData weatherData;
     private List<Vendor> vendors;
+    private Client client;
 
     public UpcomingEventDTO() {
     }
@@ -31,6 +33,7 @@ public class UpcomingEventDTO {
         this.venueName = event.getVenue() != null ? event.getVenue().getName() : null;
         this.weatherData = weatherData;
         this.vendors = event.getVendors();
+        this.client = event.getClient();
     }
 
     // Getters and setters
@@ -96,5 +99,13 @@ public class UpcomingEventDTO {
 
     public void setVendors(List<Vendor> vendors) {
         this.vendors = vendors;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 }

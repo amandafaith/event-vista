@@ -2,38 +2,51 @@ import React, { useState, useEffect } from "react";
 import { eventApi } from "../../services/api";
 import styles from "./UpcomingEvents.module.css";
 
-const getWeatherEmoji = (icon) => {
-  const emojiMap = {
-    "01d": "☀️",
-    "01n": "🌙",
-    "02d": "⛅",
-    "02n": "☁️",
-    "03d": "☁️",
-    "03n": "☁️",
-    "04d": "☁️",
-    "04n": "☁️",
-    "09d": "🌧️",
-    "09n": "🌧️",
-    "10d": "🌦️",
-    "10n": "🌧️",
-    "11d": "⛈️",
-    "11n": "⛈️",
-    "13d": "❄️",
-    "13n": "❄️",
-    "50d": "🌫️",
-    "50n": "🌫️",
+const getWeatherIcon = (icon) => {
+  const iconMap = {
+    "01d": "/animated/day.svg",
+    "01n": "/animated/night.svg",
+    "02d": "/animated/cloudy-day-1.svg",
+    "02n": "/animated/cloudy-night-1.svg",
+    "03d": "/animated/cloudy-day-2.svg",
+    "03n": "/animated/cloudy-night-2.svg",
+    "04d": "/animated/cloudy-day-3.svg",
+    "04n": "/animated/cloudy-night-3.svg",
+    "09d": "/animated/rainy-1.svg",
+    "09n": "/animated/rainy-1.svg",
+    "10d": "/animated/rainy-2.svg",
+    "10n": "/animated/rainy-2.svg",
+    "11d": "/animated/thunder.svg",
+    "11n": "/animated/thunder.svg",
+    "13d": "/animated/snowy-1.svg",
+    "13n": "/animated/snowy-1.svg",
+    "50d": "/animated/cloudy.svg",
+    "50n": "/animated/cloudy.svg",
   };
-  return emojiMap[icon] || "☀️";
+  return iconMap[icon] || "/animated/day.svg";
 };
 
 const formatDate = (dateString) => {
   const date = new Date(dateString + "T00:00:00");
-  return date.toLocaleDateString("en-US", {
+  const options = {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  });
+  };
+  return date
+    .toLocaleDateString("en-US", options)
+    .replace(/,/g, "")
+    .replace(/\s+/g, " ");
+};
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return "";
+  const [hours, minutes] = timeStr.split(":");
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
 };
 
 const UpcomingEvents = ({ refreshTrigger }) => {
@@ -81,27 +94,47 @@ const UpcomingEvents = ({ refreshTrigger }) => {
       <div className={styles.eventsList}>
         {upcomingEvents.map((event) => (
           <div key={event.id} className={styles.eventCard}>
-            <div className={styles.eventDate}>📅 {formatDate(event.date)}</div>
-            <div className={styles.eventName}>{event.name}</div>
-            <div className={styles.eventLocation}>
-              {event.venueName || "No venue set"}
-            </div>
-            {event.vendors && event.vendors.length > 0 && (
-              <div className={styles.eventVendors}>
-                 {event.vendors.map((vendor) => vendor.name).join(", ")}
+            <div className={styles.eventContent}>
+              <div className={styles.eventName}>{event.name}</div>
+              <div className={styles.eventDate}>
+                📅 {formatDate(event.date)}
               </div>
-            )}
+              <div className={styles.eventTime}>
+                🕒 {formatTime(event.time)}
+              </div>
+              <div className={styles.eventLocation}>
+                {event.venueName || "No venue set"}
+              </div>
+              {event.vendors && event.vendors.length > 0 && (
+                <div className={styles.eventVendors}>
+                  {event.vendors.map((vendor) => vendor.name).join(", ")}
+                </div>
+              )}
+              {event.client && (
+                <div className={styles.eventClient}>{event.client.name}</div>
+              )}
+            </div>
             {event.weatherData && event.weatherData.icon ? (
-              <div className={styles.eventWeather}>
-                {getWeatherEmoji(event.weatherData.icon)}{" "}
-                {event.weatherData.description}, {event.weatherData.temperature}
-                {event.date === new Date().toISOString().split("T")[0]
-                  ? " (Current)"
-                  : " (Forecast)"}
+              <div className={styles.weatherSection}>
+                <img
+                  src={getWeatherIcon(event.weatherData.icon)}
+                  alt={event.weatherData.description}
+                  className={styles.weatherIcon}
+                />
+                <div className={styles.weatherInfo}>
+                  {event.weatherData.description}
+                  <br />
+                  {event.weatherData.temperature}
+                  {event.date === new Date().toISOString().split("T")[0]
+                    ? " (Current)"
+                    : " (Forecast)"}
+                </div>
               </div>
             ) : (
-              <div className={styles.eventWeather}>
-                Weather data not available
+              <div className={styles.weatherSection}>
+                <div className={styles.weatherInfo}>
+                  Weather data not available
+                </div>
               </div>
             )}
           </div>

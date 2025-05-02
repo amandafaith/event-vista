@@ -241,8 +241,6 @@
   background: #60a5fa;
 }
 
-
-
 .calendarDayEvents {
   display: flex;
   flex-direction: column;
@@ -263,9 +261,6 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-
-
 
 /* Month View Event Styles */
 .calendarDay .calendarEvent {
@@ -295,6 +290,12 @@
 .calendarDay .eventName {
   font-weight: bold;
   font-size: 0.7rem;
+}
+
+.calendarDay .eventClient {
+  font-size: 0.6rem;
+  opacity: 0.9;
+  color: white;
 }
 
 .calendarDay .eventVenue {
@@ -399,7 +400,21 @@
   margin-bottom: 2px;
 }
 
+.weekEventClient {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  margin-bottom: 2px;
+  color: white;
+}
+
 .weekEventVenue {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  margin-bottom: 2px;
+  color: white;
+}
+
+.weekEventVendors {
   font-size: 0.7rem;
   opacity: 0.9;
   margin-bottom: 2px;
@@ -410,13 +425,6 @@
   font-size: 0.7rem;
   opacity: 0.9;
   font-style: italic;
-}
-
-.weekEventVendors {
-  font-size: 0.7rem;
-  opacity: 0.9;
-  margin-bottom: 2px;
-  color: white;
 }
 
 .calendarEventWeek:hover {
@@ -495,7 +503,21 @@
   margin-bottom: 3px;
 }
 
+.calendarDayView .weekEventClient {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-bottom: 3px;
+  color: white;
+}
+
 .calendarDayView .weekEventVenue {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-bottom: 3px;
+  color: white;
+}
+
+.calendarDayView .weekEventVendors {
   font-size: 0.8rem;
   opacity: 0.9;
   margin-bottom: 3px;
@@ -506,13 +528,6 @@
   font-size: 0.8rem;
   opacity: 0.9;
   font-style: italic;
-}
-
-.calendarDayView .weekEventVendors {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  margin-bottom: 3px;
-  color: white;
 }
 
 /* Button Styles */
@@ -543,6 +558,12 @@
 }
 
 /* Utility Styles */
+.eventClient {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 2px;
+}
+
 .eventVenue {
   font-size: 0.7rem;
   color: #666;
@@ -553,6 +574,12 @@
   font-size: 0.7rem;
   color: #666;
   margin-top: 2px;
+}
+
+.dayEventClient {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 4px;
 }
 
 .dayEventVenue {
