@@ -5,6 +5,8 @@ import { useAuth } from "../../context/AuthContext";
 import { vendorApi, skillApi } from "../../services/api";
 import "../../styles/components.css";
 import styles from "./VendorForm.module.css";
+import { useNavigate } from "react-router-dom";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const VendorForm = ({ initialData, onSubmit, onCancel }) => {
   const { token } = useAuth();
@@ -410,36 +412,33 @@ const VendorForm = ({ initialData, onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Email Address</label>
+        <div className={styles.formGroup}>
+          <label htmlFor="email" className={styles.label}>
+            Email
+          </label>
           <input
             type="email"
+            id="email"
             name="emailAddress"
             value={formData.emailAddress}
             onChange={handleChange}
-            className={`form-input ${errors.emailAddress ? "error" : ""}`}
-            required
+            className={`${styles.input} ${
+              errors.emailAddress ? styles.error : ""
+            }`}
           />
           {errors.emailAddress && (
-            <div className="error-text">{errors.emailAddress}</div>
+            <span className={styles.errorText}>{errors.emailAddress}</span>
           )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Phone Number</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber.phoneNumber}
-            onChange={handleChange}
-            className={`form-input ${errors.phoneNumber ? "error" : ""}`}
-            placeholder="(123) 456-7890"
-            required
-          />
-          {errors.phoneNumber && (
-            <div className="error-text">{errors.phoneNumber}</div>
-          )}
-        </div>
+        <PhoneNumberInput
+          label="Phone Number"
+          name="phoneNumber"
+          value={formData.phoneNumber.phoneNumber}
+          onChange={handleChange}
+          error={errors.phoneNumber}
+          required
+        />
 
         <div className="form-group">
           <label className="form-label">Skills</label>

@@ -1,8 +1,8 @@
 import React from "react";
 import "../../styles/components.css";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const ClientSearchResults = ({ clients = [], onEdit, onDelete }) => {
-
   const clientsArray = Array.isArray(clients) ? clients : [];
 
   if (clientsArray.length === 0) {
@@ -40,9 +40,16 @@ const ClientSearchResults = ({ clients = [], onEdit, onDelete }) => {
             <p key={`email-${client.id}`}>📧 {client.emailAddress}</p>
             <p key={`phone-${client.id}`}>
               📞{" "}
-              {typeof client.phoneNumber === "object"
-                ? client.phoneNumber.phoneNumber
-                : client.phoneNumber}
+              <PhoneNumberInput
+                name={`phone-${client.id}`}
+                value={
+                  typeof client.phoneNumber === "object"
+                    ? client.phoneNumber.phoneNumber
+                    : client.phoneNumber
+                }
+                onChange={() => {}}
+                displayMode={true}
+              />
             </p>
             {client.notes && (
               <p key={`notes-${client.id}`}>📝 {client.notes}</p>

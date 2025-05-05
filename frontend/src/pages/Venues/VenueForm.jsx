@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { venueApi } from "../../services/api";
 import "../../styles/components.css";
 import styles from "./VenueForm.module.css";
+import { useNavigate } from "react-router-dom";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const VenueForm = ({ initialData, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -125,6 +127,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
         <h2 className={styles.formTitle}>
           {initialData ? "Edit Venue" : "Add New Venue"}
         </h2>
+        <p className={styles.formSubtitle}>Enter the venue details below</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -171,21 +174,14 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Phone Number</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber.phoneNumber}
-            onChange={handleChange}
-            className={`form-input ${errors.phoneNumber ? "error" : ""}`}
-            placeholder="(123) 456-7890"
-            required
-          />
-          {errors.phoneNumber && (
-            <div className="error-text">{errors.phoneNumber}</div>
-          )}
-        </div>
+        <PhoneNumberInput
+          label="Phone Number"
+          name="phoneNumber"
+          value={formData.phoneNumber.phoneNumber}
+          onChange={handleChange}
+          error={errors.phoneNumber}
+          required
+        />
 
         <div className="form-group">
           <label className="form-label">Capacity</label>

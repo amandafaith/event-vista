@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { clientApi } from "../../services/api";
 import "../../styles/components.css";
 import styles from "./ClientForm.module.css";
+import { useNavigate } from "react-router-dom";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const ClientForm = ({ initialData, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -99,6 +101,7 @@ const ClientForm = ({ initialData, onSubmit, onCancel }) => {
         <h2 className={styles.formTitle}>
           {initialData ? "Edit Client" : "Add New Client"}
         </h2>
+        <p className={styles.formSubtitle}>Enter the client details below</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -130,21 +133,14 @@ const ClientForm = ({ initialData, onSubmit, onCancel }) => {
           )}
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Phone Number</label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber.phoneNumber}
-            onChange={handleChange}
-            className={`form-input ${errors.phoneNumber ? "error" : ""}`}
-            placeholder="(123) 456-7890"
-            required
-          />
-          {errors.phoneNumber && (
-            <div className="error-text">{errors.phoneNumber}</div>
-          )}
-        </div>
+        <PhoneNumberInput
+          label="Phone Number"
+          name="phoneNumber"
+          value={formData.phoneNumber.phoneNumber}
+          onChange={handleChange}
+          error={errors.phoneNumber}
+          required
+        />
 
         <div className="form-group">
           <label className="form-label">Notes</label>

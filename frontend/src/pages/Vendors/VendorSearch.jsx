@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./VendorPage.module.css";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const VendorSearch = ({
   searchTerm,
@@ -8,6 +9,11 @@ const VendorSearch = ({
   setSearchType,
   onSearch,
 }) => {
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Trigger search when the user presses Enter
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       onSearch();
@@ -24,7 +30,6 @@ const VendorSearch = ({
         >
           <option value="name">Name</option>
           <option value="location">Location</option>
-          <option value="skills">Skill</option>
           <option value="phone">Phone</option>
           <option value="email">Email</option>
         </select>
@@ -32,14 +37,26 @@ const VendorSearch = ({
       </div>
 
       <div className={styles.searchInputWrapper}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder={`Search by ${searchType}...`}
-          className={styles.searchInput}
-        />
+        {searchType === "phone" ? (
+          <PhoneNumberInput
+            name="searchTerm"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder={`Search by ${searchType}...`}
+            inputClassName={styles.searchInput}
+            searchMode={true}
+          />
+        ) : (
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder={`Search by ${searchType}...`}
+            className={styles.searchInput}
+          />
+        )}
         <div className={styles.searchIcon}>
           <svg
             width="16"

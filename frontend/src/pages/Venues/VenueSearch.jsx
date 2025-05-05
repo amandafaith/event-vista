@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./VenuePage.module.css";
+import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
 const VenueSearch = ({
   searchTerm,
@@ -8,6 +9,10 @@ const VenueSearch = ({
   setSearchType,
   onSearch,
 }) => {
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   // Trigger search when the user presses Enter
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -32,14 +37,26 @@ const VenueSearch = ({
       </div>
 
       <div className={styles.searchInputWrapper}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder={`Search by ${searchType}...`}
-          className={styles.searchInput}
-        />
+        {searchType === "phone" ? (
+          <PhoneNumberInput
+            name="searchTerm"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder={`Search by ${searchType}...`}
+            inputClassName={styles.searchInput}
+            searchMode={true}
+          />
+        ) : (
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder={`Search by ${searchType}...`}
+            className={styles.searchInput}
+          />
+        )}
         <div className={styles.searchIcon}>
           <svg
             width="16"
