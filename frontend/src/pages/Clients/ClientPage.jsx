@@ -200,7 +200,6 @@ const ClientPage = () => {
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <h1>Clients</h1>
-          <p>Manage your event clients</p>
         </div>
 
         <div className={styles.actionsContainer}>

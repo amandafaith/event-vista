@@ -10,7 +10,6 @@ import VenuePage from "./pages/Venues/VenuePage";
 import VendorPage from "./pages/Vendors/VendorPage";
 import ClientPage from "./pages/Clients/ClientPage";
 import "./App.css";
-import Welcome from "./pages/Welcome/Welcome";
 import OAuth2RedirectHandler from "./pages/User/OAuth2RedirectHandler";
 import UserProfile from "./pages/User/UserProfile";
 
@@ -34,7 +33,8 @@ function App() {
     <AuthProvider>
       <div className="App">
         <Routes>
-            <Route path="/" element={<Welcome />} />
+          {/* <Route path="/" element={<Welcome />} /> */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
@@ -48,18 +48,17 @@ function App() {
               </ProtectedRoute>
             }
           />
-                    <Route
-                      path="/profile"
-                      element={
-                        <ProtectedRoute>
-                          <UserProfile />
-                        </ProtectedRoute>
-                      }
-                    />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/venues" element={<VenuePage />} />
           <Route path="/vendors" element={<VendorPage />} />
           <Route path="/clients" element={<ClientPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>
     </AuthProvider>

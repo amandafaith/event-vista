@@ -267,7 +267,6 @@ const VendorPage = () => {
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <h1>Vendors</h1>
-          <p>Manage your event vendors</p>
         </div>
 
         <div className={styles.actionsContainer}>

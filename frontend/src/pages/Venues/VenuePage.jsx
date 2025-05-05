@@ -212,7 +212,6 @@ const VenuePage = () => {
       <div className={styles.contentContainer}>
         <div className={styles.header}>
           <h1>Venues</h1>
-          <p>Manage your event venues and locations</p>
         </div>
 
         <div className={styles.actionsContainer}>
