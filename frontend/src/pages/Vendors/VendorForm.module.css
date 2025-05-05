@@ -2,9 +2,30 @@
   max-width: 600px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.formHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.formTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  background: transparent;
+}
+
+.formSubtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  background: transparent;
 }
 
 .formGroup {

@@ -91,41 +91,40 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
         };
         console.log("Submitting venue data:", venueData);
         await onSubmit(venueData); // await and catch
-        } catch (error) {
-          console.error("Error saving venue:", error);
+      } catch (error) {
+        console.error("Error saving venue:", error);
 
-          const serverError = error?.response?.data?.error;
+        const serverError = error?.response?.data?.error;
 
-          if (typeof serverError === "string") {
-            const lowerError = serverError.toLowerCase();
-            const fieldErrors = {};
+        if (typeof serverError === "string") {
+          const lowerError = serverError.toLowerCase();
+          const fieldErrors = {};
 
-            if (lowerError.includes("email")) {
-              fieldErrors.emailAddress = serverError;
-            } else if (lowerError.includes("phone")) {
-              fieldErrors.phoneNumber = serverError;
-            } else if (lowerError.includes("name")) {
-              fieldErrors.name = serverError;
-            } else {
-              fieldErrors.submit = serverError;
-            }
-
-            setErrors(fieldErrors);
+          if (lowerError.includes("email")) {
+            fieldErrors.emailAddress = serverError;
+          } else if (lowerError.includes("phone")) {
+            fieldErrors.phoneNumber = serverError;
+          } else if (lowerError.includes("name")) {
+            fieldErrors.name = serverError;
           } else {
-            // Fallback generic error
-            setErrors({ submit: "Failed to save venue. Please try again." });
+            fieldErrors.submit = serverError;
           }
+
+          setErrors(fieldErrors);
+        } else {
+          // Fallback generic error
+          setErrors({ submit: "Failed to save venue. Please try again." });
         }
       }
+    }
   };
 
   return (
-    <div className="form-container">
-      <div className="form-header">
-        <h2 className="form-title">
+    <div className={styles.form}>
+      <div className={styles.formHeader}>
+        <h2 className={styles.formTitle}>
           {initialData ? "Edit Venue" : "Add New Venue"}
         </h2>
-        <p className="form-subtitle">Enter the venue details below</p>
       </div>
 
       <form onSubmit={handleSubmit}>

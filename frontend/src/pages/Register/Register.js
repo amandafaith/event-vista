@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { authApi } from "../../services/api";
 import "./Register.css";
 
 const Register = () => {
@@ -53,84 +52,94 @@ const Register = () => {
   return (
     <div className="register-container">
       <div className="register-box">
-        <div className="register-header">
-          <h2 className="register-title">Create your account</h2>
-        </div>
-        <form className="register-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username" className="sr-only">
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              className="form-input"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="emailAddress" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="emailAddress"
-              name="emailAddress"
-              type="email"
-              required
-              className="form-input"
-              placeholder="Email address"
-              value={formData.emailAddress}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="form-input"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="verifyPassword" className="sr-only">
-              Verify Password
-            </label>
-            <input
-              id="verifyPassword"
-              name="verifyPassword"
-              type="password"
-              required
-              className="form-input"
-              placeholder="Verify Password"
-              value={formData.verifyPassword}
-              onChange={handleChange}
-            />
-          </div>
+        <div className="register-content">
+          <div className="register-header">
+            <h2 className="register-title">Create your account</h2>
 
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+            <p className="login-subtitle">
+              Or{" "}
+              <Link to="/login" className="login-link">
+                sign in to your account
+              </Link>
+            </p>
 
-          <button type="submit" className="submit-button">
-            Register
-          </button>
-        </form>
+          </div>
+          <form className="register-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="username" className="sr-only">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="form-input"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="emailAddress" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="emailAddress"
+                name="emailAddress"
+                type="email"
+                required
+                className="form-input"
+                placeholder="Email address"
+                value={formData.emailAddress}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="form-input"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="verifyPassword" className="sr-only">
+                Verify Password
+              </label>
+              <input
+                id="verifyPassword"
+                name="verifyPassword"
+                type="password"
+                required
+                className="form-input"
+                placeholder="Verify Password"
+                value={formData.verifyPassword}
+                onChange={handleChange}
+              />
+            </div>
 
-        <div className="login-prompt">
-          Already have an account?{" "}
-          <Link to="/login" className="login-link">
-            Sign in
-          </Link>
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            <button type="submit" className="submit-button">
+              Create Account
+            </button>
+          </form>
+
+          <div className="login-prompt">
+            Already have an account?{" "}
+            <Link to="/login" className="login-link">
+              Sign in
+            </Link>
+          </div>
         </div>
       </div>
     </div>

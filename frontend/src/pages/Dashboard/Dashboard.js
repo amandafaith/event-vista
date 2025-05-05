@@ -8,8 +8,6 @@ import "../../styles/components.css";
 import { useNavigate } from "react-router-dom";
 import Navigation from "../../components/common/Navigation/Navigation";
 
-//testing repo name
-
 const Dashboard = () => {
   const { user, logout, token } = useAuth();
   const [events, setEvents] = useState([]);
@@ -19,6 +17,22 @@ const Dashboard = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [eventUpdateCount, setEventUpdateCount] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        const notification = document.querySelector(".notification");
+        if (notification) {
+          notification.classList.add("hiding");
+          // Wait for the exit animation to complete before removing the message
+          setTimeout(() => {
+            setSuccessMessage(null);
+          }, 300);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const redirectToUserProfile = () => {
     navigate("/profile");
@@ -98,7 +112,7 @@ const Dashboard = () => {
       <div className="dashboard-container">
         <div className="dashboard-content">
           {successMessage && (
-            <div className="success-message" style={{ margin: "1rem 0" }}>
+            <div className="notification success-notification">
               {successMessage}
             </div>
           )}

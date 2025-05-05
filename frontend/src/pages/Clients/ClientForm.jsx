@@ -94,12 +94,11 @@ const ClientForm = ({ initialData, onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="form-container">
-      <div className="form-header">
-        <h2 className="form-title">
+    <div className={styles.form}>
+      <div className={styles.formHeader}>
+        <h2 className={styles.formTitle}>
           {initialData ? "Edit Client" : "Add New Client"}
         </h2>
-        <p className="form-subtitle">Enter the client details below</p>
       </div>
 
       <form onSubmit={handleSubmit}>
