@@ -83,7 +83,7 @@ public class EventService {
 // Throws InvalidEventDataException if the event data is invalid
     @Transactional
     public Event addEvent(Event event, User user) {
-        validateEventData(event);
+        validateEventData(event, false);
 
         // Set the user
         event.setUser(user);
@@ -111,7 +111,7 @@ public class EventService {
 // Throws InvalidEventDataException if the event data is invalid
     @Transactional
     public Event updateEvent(Integer id, Event updatedEvent, User user) {
-        validateEventData(updatedEvent);
+        validateEventData(updatedEvent, false);
 
         return eventRepository.findByIdAndUser(id, user)
                 .map(existingEvent -> {
@@ -166,7 +166,7 @@ public class EventService {
 // Throws InvalidEventDataException if the new event data is invalid
     @Transactional
     public Event rebookEvent(Integer id, Event newEventDetails, User user) {
-        validateEventData(newEventDetails);
+        validateEventData(newEventDetails, true);
 
         Event originalEvent = eventRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
@@ -193,7 +193,7 @@ public class EventService {
             newEvent.setName(newEventDetails.getName());
         }
 
-        //Date and time must be changed for rebooking
+        //Date and time must be provided for rebooking
         if (newEventDetails.getDate() == null || newEventDetails.getTime() == null) {
             throw new InvalidEventDataException("Date and time must be provided for rebooking");
         }
@@ -262,11 +262,6 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    // Retrieves all events for a specific date
-    // Returns list of events for the date, may be empty if no events exist
-    public List<Event> findEventsByDate(LocalDate date, User user) {
-        return eventRepository.findByDateBetweenAndUser(date, date, user);
-    }
 
     // Retrieves all events for a specific date range
     // Returns list of events within the date range, may be empty if no events exist
@@ -277,7 +272,7 @@ public class EventService {
 
     // Validates the event data before saving or updating.
     // Throws InvalidEventDataException if any required field is missing or invalid
-    private void validateEventData(Event event) {
+    private void validateEventData(Event event, boolean isRebooking) {
         if (event == null) {
             throw new InvalidEventDataException("Event cannot be null");
         }
@@ -289,6 +284,21 @@ public class EventService {
         }
         if (event.getTime() == null) {
             throw new InvalidEventDataException("Event time cannot be null");
+        }
+
+        // Only validate future dates when rebooking
+        if (isRebooking) {
+            LocalDate currentDate = LocalDate.now();
+            LocalTime currentTime = LocalTime.now();
+
+            if (event.getDate().isBefore(currentDate)) {
+                throw new InvalidEventDataException("Event date must be in the future");
+            }
+
+            // If the event is today, validate that the time is in the future
+            if (event.getDate().equals(currentDate) && event.getTime().isBefore(currentTime)) {
+                throw new InvalidEventDataException("Event time must be in the future");
+            }
         }
     }
 }

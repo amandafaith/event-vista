@@ -1,6 +1,7 @@
 package com.eventvista.event_vista.controller;
 
 import com.eventvista.event_vista.exception.EventNotFoundException;
+import com.eventvista.event_vista.exception.InvalidEventDataException;
 import com.eventvista.event_vista.model.Event;
 import com.eventvista.event_vista.model.User;
 import com.eventvista.event_vista.model.dto.UpcomingEventDTO;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 
@@ -225,44 +227,66 @@ public class EventController {
     }
 
     // Rebook an existing event with new details for the current authenticated user
+    // This method is designed to be flexible by allowing users to:
+    // Keep all original event details
+    // Update any combination of fields
+    // Rebook for the same date/time
+    // Rebook for any date/time in the present or future
+
+    // Verifies user authentication
+    // Checks if request body exists
+    // Delegates all business validation to service layer
+
+    // Any field not included in the request will keep its original value
+    // Fields included with empty values are cleared
+    // Name is required (must not be blank)
+
     // Returns ResponseEntity containing:
-    // The rebooked event if successful - 200 OK
-    // 404 Not Found if the event does not exist (no response body)
-    // Error message 400 Bad Request if rebooking data is invalid
-    // Specific error 500 message if something else goes wrong
+    // 200 OK with the rebooked event if successful
+    // 404 Not Found if the original event doesn't exist
+    // 400 Bad request if:
+    // - New event details are null
+    // - Service layer validation fails (name, date, time, etc.)
+    // 500 Internal Server Error if something else goes wrong
+
     @PostMapping("/rebook/{id}")
     public ResponseEntity<?> rebookEvent(@PathVariable("id") Integer id, @RequestBody Event newEventDetails) {
         try {
+            // Get authenticated user first
             User user = authUtil.getUserFromAuthentication();
+
+            // Basic request validation - only check if the request body exists
+            if (newEventDetails == null) {
+                throw new InvalidEventDataException("New event details cannot be null");
+            }
+
+            // Let the service layer handle all business validations
             Event rebookedEvent = eventService.rebookEvent(id, newEventDetails, user);
             return ResponseEntity.ok(rebookedEvent);
         } catch (EventNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (InvalidEventDataException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Invalid event data: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Error rebooking event: " + e.getMessage());
+            response.put("message", "An unexpected error occurred while rebooking the event: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
 
-    // Retrieves all events for a specific date for the authenticated user
+
+    // Retrieves all events within a date range for the authenticated user
+    // Used by the calendar component to display events in month/week/day views
     // Returns ResponseEntity containing:
-    // List of events if found - 200 OK - may be empty if no events exist for date
+    // List of events if found - 200 OK - may be empty if no events exist in range
+    // 400 Bad Request if date format is invalid
     // Specific error 500 message if something else goes wrong
-    @GetMapping("/by-date/{date}")
-    public ResponseEntity<?> getEventsByDate(@PathVariable("date") String date) {
-        try {
-            User user = authUtil.getUserFromAuthentication();
-            LocalDate localDate = LocalDate.parse(date);
-            List<Event> events = eventService.findEventsByDate(localDate, user);
-            return ResponseEntity.ok(events);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Error retrieving events by date: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
-        }
-    }
-
     @GetMapping("/by-date-range")
     public ResponseEntity<?> getEventsByDateRange(
             @RequestParam("startDate") String startDate,
@@ -271,8 +295,14 @@ public class EventController {
             User user = authUtil.getUserFromAuthentication();
             LocalDate startLocalDate = LocalDate.parse(startDate);
             LocalDate endLocalDate = LocalDate.parse(endDate);
+
             List<Event> events = eventService.findEventsByDateRange(startLocalDate, endLocalDate, user);
             return ResponseEntity.ok(events);
+
+        } catch (DateTimeParseException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Invalid date format. Please use YYYY-MM-DD format");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Error retrieving events by date range: " + e.getMessage());

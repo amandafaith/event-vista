@@ -97,6 +97,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+// Handle changes to basic form fields (name, date, time, notes)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,6 +106,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
     }
   };
 
+// Handle Venue Selection from dropdown
   const handleVenueChange = (e) => {
     const selectedVenue = venues.find((v) => v.id === parseInt(e.target.value));
     setFormData((prev) => ({ ...prev, venue: selectedVenue }));
@@ -113,11 +115,12 @@ const EventForm = ({ onSubmit, onCancel }) => {
     }
   };
 
+// Handle Vendor Selection from dropdown (allows multiple)
   const handleVendorChange = (e) => {
     const selectedVendor = vendors.find(
       (v) => v.id === parseInt(e.target.value)
     );
-
+// Only add vendor if not already selected
     if (
       selectedVendor &&
       !formData.vendors.some((v) => v.id === selectedVendor.id)
@@ -133,6 +136,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
     }
   };
 
+// Remove a vendor from the selected vendors list
   const removeVendor = (vendorId) => {
     setFormData((prev) => ({
       ...prev,
@@ -140,6 +144,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
     }));
   };
 
+// Handle client selection from dropdown
   const handleClientChange = (e) => {
     const selectedClient = clients.find(
       (c) => c.id === parseInt(e.target.value)
@@ -149,11 +154,12 @@ const EventForm = ({ onSubmit, onCancel }) => {
       setErrors((prev) => ({ ...prev, client: undefined }));
     }
   };
-
+// Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       try {
+          // Format data for API submission
         const eventData = {
           name: formData.name,
           date: formData.date,
@@ -164,7 +170,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
           vendors: formData.vendors.map((vendor) => ({ id: vendor.id })),
         };
         await eventApi.createEvent(eventData);
-        onSubmit();
+        onSubmit(); // Notify parent of successful submission
       } catch (error) {
         setErrors((prev) => ({
           ...prev,
@@ -330,7 +336,7 @@ const EventForm = ({ onSubmit, onCancel }) => {
           {errors.submit && (
             <div className={styles.errorMessage}>{errors.submit}</div>
           )}
-
+{/* Display submission errors if any */}
           <div className={styles.buttonGroup}>
             <button type="submit" className={styles.submitButton}>
               Create Event

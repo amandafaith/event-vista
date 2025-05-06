@@ -117,7 +117,13 @@ const Calendar = ({ onEventUpdated, onAddEvent }) => {
 
   const getEventsForDate = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-    return eventsByDate[dateStr] || [];
+    const events = eventsByDate[dateStr] || [];
+    // Sort events by time
+    return [...events].sort((a, b) => {
+      const timeA = a.time.split(":").map(Number);
+      const timeB = b.time.split(":").map(Number);
+      return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]);
+    });
   };
 
   const handlePrevious = () => {

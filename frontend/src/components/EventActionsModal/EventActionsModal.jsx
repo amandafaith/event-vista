@@ -88,8 +88,11 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = {};
+    setErrors({});
+    setError(null);
 
+    // Validate form
+    const newErrors = {};
     if (!formData.name.trim()) {
       newErrors.name = "Event name is required";
     }
@@ -116,6 +119,12 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
       setAction("view");
     } catch (err) {
       console.error("Error saving event:", err);
+      // Handle specific error messages from the backend
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("An error occurred while saving the event. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -309,10 +318,7 @@ const EventActionsModal = ({ event, onClose, onEventUpdated }) => {
           </h2>
         </div>
 
-        {error && <div className={styles.error}>{error}</div>}
-        {successMessage && (
-          <div className={styles.success}>{successMessage}</div>
-        )}
+        {error && <div className={styles.errorMessage}>{error}</div>}
 
         {action === "view" ? (
           <div className={styles.viewMode}>
