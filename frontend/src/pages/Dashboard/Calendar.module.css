@@ -34,10 +34,14 @@
 .navigation {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  justify-content: center;
+  position: relative;
+  width: 400px;
+  height: 40px;
 }
 
 .navigation button {
+  position: absolute;
   background: none;
   border: none;
   font-size: 1.25rem;
@@ -45,10 +49,15 @@
   padding: 0.5rem;
   color: var(--text-light);
   transition: transform 0.2s ease;
+  z-index: 2;
 }
 
-.navigation button:hover {
-  transform: scale(1.1);
+.navigation button:first-child {
+  left: 0;
+}
+
+.navigation button:last-child {
+  right: 0;
 }
 
 .navigation h2 {
@@ -59,7 +68,11 @@
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-md);
-  /* border: .5px solid var(--border-color); */
+  text-align: center;
+  width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .viewControls {

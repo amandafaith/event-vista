@@ -231,9 +231,12 @@ public class EventService {
         return e1.getTime().compareTo(e2.getTime());
     }
 
-    // Retrieves all upcoming events with weather information for a given user.
-    // For each event, fetches weather data for the event's location and date.
+
+    // Gets events between today and 5 days from now for a given user
+    // Sorts them chronologically by date and time
+    // Enriches each event with weather data from OWM API
     // Returns List of upcoming events with weather data, may be empty if no upcoming events exist
+    // Events without venues will have null weather data.
     public List<UpcomingEventDTO> findUpcomingEventsWithWeather(User user) {
         LocalDate currentDate = LocalDate.now();
         LocalDate fiveDaysFromNow = currentDate.plusDays(5);
@@ -245,7 +248,7 @@ public class EventService {
         // Sort events by date and time
         events.sort(this::compareEventsByDateTime);
 
-        // Use WeatherService to enrich events with weather data
+        // Pass events to WeatherService for enrichment
         return weatherService.enrichEventsWithWeather(events);
     }
 

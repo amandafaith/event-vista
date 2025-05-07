@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -27,6 +28,12 @@ public class WeatherController {
         this.weatherService = weatherService;
     }
 
+    // Creates a response map with the given message
+    private Map<String, String> createResponse(String message) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", message);
+        return response;
+    }
 
     // Retrieves weather data for a specific location and date
     // Returns ResponseEntity containing:
@@ -42,31 +49,34 @@ public class WeatherController {
             WeatherData weather = weatherService.getWeatherData(location, eventDate);
             return ResponseEntity.ok(weather);
         } catch (DateTimeParseException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Invalid date format. Please use YYYY-MM-DD format");
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest()
+                    .body(createResponse("Invalid date format. Please use YYYY-MM-DD format"));
+        } catch (HttpClientErrorException e) {
+            String message;
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                message = "Location not found. Please enter a valid city name.";
+            } else if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                message = "Too many requests to the weather service. Please try again later.";
+            } else {
+                message = "Error retrieving weather data: " + e.getMessage();
+            }
+            return ResponseEntity.status(e.getStatusCode()).body(createResponse(message));
         } catch (WeatherServiceException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", e.getMessage());
-
-            // Determine appropriate status code based on error type
             if (e.getMessage().contains("cannot be empty") ||
                     e.getMessage().contains("cannot be null") ||
                     e.getMessage().contains("past dates") ||
                     e.getMessage().contains("only available for up to 5 days")) {
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.badRequest().body(createResponse(e.getMessage()));
             } else if (e.getMessage().contains("not configured")) {
-                return ResponseEntity.internalServerError().body(response);
+                return ResponseEntity.internalServerError().body(createResponse(e.getMessage()));
             } else {
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.badRequest().body(createResponse(e.getMessage()));
             }
         } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Error retrieving weather data: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            return ResponseEntity.internalServerError()
+                    .body(createResponse("Error retrieving weather data: " + e.getMessage()));
         }
     }
-
 
     // Validates the input parameters for the weather request
     // Location length must be less than 100 characters to match Venue entity constraints

@@ -49,7 +49,7 @@
 }
 
 .modalHeader {
-  margin-bottom: 0;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
   border-top: none;
@@ -270,7 +270,8 @@
 
 .submitButton:disabled {
   background-color: var(--text-secondary) !important;
-  cursor: not-allowed;
+  cursor: pointer !important;
+  opacity: 0.7;
 }
 
 .cancelButton {
@@ -282,6 +283,11 @@
   background-color: var(--secondary-dark) !important;
 }
 
+.cancelButton:disabled {
+  cursor: pointer !important;
+  opacity: 0.7;
+}
+
 .deleteButton {
   composes: button;
   background-color: var(--accent-1) !important;
@@ -289,6 +295,11 @@
 
 .deleteButton:hover {
   background-color: var(--accent-1-dark) !important;
+}
+
+.deleteButton:disabled {
+  cursor: pointer !important;
+  opacity: 0.7;
 }
 
 .selectedVendors {

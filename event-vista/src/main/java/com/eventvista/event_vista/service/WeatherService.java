@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class WeatherService {
         this.objectMapper = new ObjectMapper();
     }
 
-    // Gets weather data for a specific location and date
+    // Main method to get weather data for a specific location and date
     // Handles both current weather and forecasts up to 5 days in advance
     public WeatherData getWeatherData(String location, LocalDate eventDate) {
         validateInputs(location, eventDate);
@@ -82,8 +83,8 @@ public class WeatherService {
         String url = String.format("%s/data/2.5/%s?q=%s&appid=%s&units=imperial",
                 weatherApiUrl, endpoint, location, apiKey);
 
+        String response = restTemplate.getForObject(url, String.class);
         try {
-            String response = restTemplate.getForObject(url, String.class);
             JsonNode root = objectMapper.readTree(response);
 
             if (endpoint.equals("forecast")) {
@@ -103,10 +104,8 @@ public class WeatherService {
             }
 
             return extractWeatherData(root);
-        } catch (RestClientException e) {
-            throw new WeatherServiceException("Failed to fetch weather: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new WeatherServiceException("Error processing weather data: " + e.getMessage(), e);
+        } catch (JsonProcessingException e) {
+            throw new WeatherServiceException("Error processing weather data response: " + e.getMessage());
         }
     }
 
@@ -130,15 +129,18 @@ public class WeatherService {
     public List<UpcomingEventDTO> enrichEventsWithWeather(List<Event> events) {
         return events.stream()
                 .map(event -> {
+                    // Try to get weather data for the event's venue location
                     WeatherData weatherData = Optional.ofNullable(event.getVenue())
                             .map(venue -> {
                                 try {
+                                    // Call OpenWeatherMap API for the venue's location
                                     return getWeatherData(venue.getLocation(), event.getDate());
                                 } catch (Exception e) {
                                     return null;
                                 }
                             })
                             .orElse(null);
+                    // Create DTO with event and weather data
                     return new UpcomingEventDTO(event, weatherData);
                 })
                 .collect(Collectors.toList());

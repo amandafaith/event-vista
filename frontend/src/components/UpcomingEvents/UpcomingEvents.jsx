@@ -30,6 +30,8 @@ const UpcomingEvents = ({ refreshTrigger }) => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     const fetchUpcomingEvents = async () => {
@@ -48,6 +50,26 @@ const UpcomingEvents = ({ refreshTrigger }) => {
     fetchUpcomingEvents();
   }, [refreshTrigger]);
 
+  const handlePreviousEvent = () => {
+    if (currentEventIndex > 0) {
+      setIsLoadingMore(true);
+      setTimeout(() => {
+        setCurrentEventIndex((prev) => prev - 1);
+        setIsLoadingMore(false);
+      }, 500);
+    }
+  };
+
+  const handleNextEvent = () => {
+    if (currentEventIndex < upcomingEvents.length - 1) {
+      setIsLoadingMore(true);
+      setTimeout(() => {
+        setCurrentEventIndex((prev) => prev + 1);
+        setIsLoadingMore(false);
+      }, 500);
+    }
+  };
+
   if (loading)
     return (
       <div className={`${styles.upcomingEvents} ${styles.loading}`}>
@@ -65,44 +87,78 @@ const UpcomingEvents = ({ refreshTrigger }) => {
       </div>
     );
 
+  const currentEvent = upcomingEvents[currentEventIndex];
+
   return (
     <div className={styles.upcomingEvents}>
       <h2>Upcoming Events</h2>
       <div className={styles.eventsList}>
-        {upcomingEvents.map((event) => (
-          <div key={event.id} className={styles.eventCard}>
-            <div className={styles.eventContent}>
-              <div className={styles.eventName}>{event.name}</div>
-              <div className={styles.eventDate}>📅 {event.formattedDate}</div>
-              <div className={styles.eventTime}>🕒 {event.formattedTime}</div>
-              <div className={styles.eventLocation}>{event.venueName}</div>
-              {event.formattedVendorNames && (
-                <div className={styles.eventVendors}>
-                  {event.formattedVendorNames}
-                </div>
-              )}
-              {event.client && (
-                <div className={styles.eventClient}>{event.client.name}</div>
-              )}
+        <div className={styles.eventCard}>
+          <div className={styles.eventContent}>
+            <div className={styles.eventName}>{currentEvent.name}</div>
+            <div className={styles.eventDate}>
+              📅 {currentEvent.formattedDate}
             </div>
-            {event.weatherData && event.weatherData.icon ? (
-              <div className={styles.weatherSection}>
-                <img
-                  src={getWeatherIcon(event.weatherData.icon)}
-                  alt={event.weatherData.description}
-                  className={styles.weatherIcon}
-                />
-                <div className={styles.weatherInfo}>{event.weatherDisplay}</div>
+            <div className={styles.eventTime}>
+              🕒 {currentEvent.formattedTime}
+            </div>
+            <div className={styles.eventLocation}>{currentEvent.venueName}</div>
+            {currentEvent.formattedVendorNames && (
+              <div className={styles.eventVendors}>
+                {currentEvent.formattedVendorNames}
               </div>
-            ) : (
-              <div className={styles.weatherSection}>
-                <div className={styles.weatherInfo}>
-                  Weather data not available
-                </div>
+            )}
+            {currentEvent.client && (
+              <div className={styles.eventClient}>
+                {currentEvent.client.name}
               </div>
             )}
           </div>
-        ))}
+          {currentEvent.weatherData && currentEvent.weatherData.icon ? (
+            <div className={styles.weatherSection}>
+              <img
+                src={getWeatherIcon(currentEvent.weatherData.icon)}
+                alt={currentEvent.weatherData.description}
+                className={styles.weatherIcon}
+              />
+              <div className={styles.weatherInfo}>
+                <div className={styles.weatherDescription}>
+                  {currentEvent.weatherData.description}
+                </div>
+                <div className={styles.weatherTemp}>
+                  {currentEvent.weatherDisplay.split("\n")[1]}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.weatherSection}>
+              <div className={styles.weatherInfo}>
+                Weather data not available
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className={styles.navigationButtons}>
+        <button
+          className={styles.navButton}
+          onClick={handlePreviousEvent}
+          disabled={isLoadingMore || currentEventIndex === 0}
+        >
+          ‹
+        </button>
+        <div className={styles.eventCounter}>
+          Event {currentEventIndex + 1} of {upcomingEvents.length}
+        </div>
+        <button
+          className={styles.navButton}
+          onClick={handleNextEvent}
+          disabled={
+            isLoadingMore || currentEventIndex === upcomingEvents.length - 1
+          }
+        >
+          ›
+        </button>
       </div>
     </div>
   );

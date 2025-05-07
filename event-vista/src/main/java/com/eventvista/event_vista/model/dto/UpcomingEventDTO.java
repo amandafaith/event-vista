@@ -79,11 +79,6 @@ public class UpcomingEventDTO {
         sb.append(weatherData.getDescription());
         sb.append("\n");
         sb.append(weatherData.getTemperature());
-        if (eventDate.equals(LocalDate.now())) {
-            sb.append(" (Current)");
-        } else {
-            sb.append(" (Forecast)");
-        }
         return sb.toString();
     }
 
