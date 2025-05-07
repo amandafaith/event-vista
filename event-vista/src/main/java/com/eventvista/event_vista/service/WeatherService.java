@@ -2,6 +2,8 @@ package com.eventvista.event_vista.service;
 
 import com.eventvista.event_vista.exception.WeatherServiceException;
 import com.eventvista.event_vista.model.dto.WeatherData;
+import com.eventvista.event_vista.model.dto.UpcomingEventDTO;
+import com.eventvista.event_vista.model.Event;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -14,6 +16,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class WeatherService {
@@ -31,31 +36,16 @@ public class WeatherService {
         this.objectMapper = new ObjectMapper();
     }
 
+    // Gets weather data for a specific location and date
+    // Handles both current weather and forecasts up to 5 days in advance
     public WeatherData getWeatherData(String location, LocalDate eventDate) {
-        try {
-            validateInputs(location, eventDate);
-            validateApiKey();
-
-            LocalDate today = LocalDate.now();
-            long daysBetween = ChronoUnit.DAYS.between(today, eventDate);
-
-            if (daysBetween < 0) {
-                throw new WeatherServiceException("Cannot get weather for past dates");
-            }
-            if (daysBetween > 5) {
-                throw new WeatherServiceException("Weather forecast is only available for up to 5 days in advance");
-            }
-
-            return daysBetween == 0 ?
-                    getCurrentWeather(location) :
-                    getForecastWeather(location, eventDate);
-        } catch (WeatherServiceException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new WeatherServiceException("Error fetching weather data: " + e.getMessage(), e);
-        }
+        validateInputs(location, eventDate);
+        validateApiKey();
+        validateDateRange(eventDate);
+        return fetchWeatherData(location, eventDate);
     }
 
+    // Validates that location and date parameters are not null or empty
     private void validateInputs(String location, LocalDate eventDate) {
         if (!StringUtils.hasText(location)) {
             throw new WeatherServiceException("Location cannot be empty");
@@ -65,63 +55,92 @@ public class WeatherService {
         }
     }
 
+    // Ensures the weather API key is properly configured
     private void validateApiKey() {
         if (!StringUtils.hasText(apiKey)) {
             throw new WeatherServiceException("Weather API key is not configured");
         }
     }
 
-    private WeatherData getCurrentWeather(String location) {
-        try {
-            String url = String.format("%s/data/2.5/weather?q=%s&appid=%s&units=imperial",
-                    weatherApiUrl, location, apiKey);
-            String response = restTemplate.getForObject(url, String.class);
-            JsonNode root = objectMapper.readTree(response);
-            return extractWeatherData(root);
-        } catch (RestClientException e) {
-            throw new WeatherServiceException("Failed to fetch current weather: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new WeatherServiceException("Error processing current weather data: " + e.getMessage(), e);
+    // Validates that the requested date is within the allowed range (today to 5 days ahead)
+    private void validateDateRange(LocalDate eventDate) {
+        LocalDate today = LocalDate.now();
+        long daysBetween = ChronoUnit.DAYS.between(today, eventDate);
+
+        if (daysBetween < 0) {
+            throw new WeatherServiceException("Cannot get weather for past dates");
+        }
+        if (daysBetween > 5) {
+            throw new WeatherServiceException("Weather forecast is only available for up to 5 days in advance");
         }
     }
 
-    private WeatherData getForecastWeather(String location, LocalDate targetDate) {
+    // Fetches weather data from the API, handling both current weather and forecasts
+    // Uses different endpoints based on whether the date is today or in the future
+    private WeatherData fetchWeatherData(String location, LocalDate targetDate) {
+        String endpoint = targetDate.equals(LocalDate.now()) ? "weather" : "forecast";
+        String url = String.format("%s/data/2.5/%s?q=%s&appid=%s&units=imperial",
+                weatherApiUrl, endpoint, location, apiKey);
+
         try {
-            String url = String.format("%s/data/2.5/forecast?q=%s&appid=%s&units=imperial",
-                    weatherApiUrl, location, apiKey);
             String response = restTemplate.getForObject(url, String.class);
             JsonNode root = objectMapper.readTree(response);
-            JsonNode list = root.path("list");
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String targetDateStr = targetDate.toString();
+            if (endpoint.equals("forecast")) {
+                JsonNode list = root.path("list");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-            for (JsonNode forecast : list) {
-                String dtTxt = forecast.path("dt_txt").asText();
-                LocalDateTime forecastDateTime = LocalDateTime.parse(dtTxt, formatter);
-
-                if (forecastDateTime.toLocalDate().equals(targetDate)) {
-                    return extractWeatherData(forecast);
+                for (JsonNode forecast : list) {
+                    LocalDateTime forecastDateTime = LocalDateTime.parse(
+                            forecast.path("dt_txt").asText(),
+                            formatter
+                    );
+                    if (forecastDateTime.toLocalDate().equals(targetDate)) {
+                        return extractWeatherData(forecast);
+                    }
                 }
+                throw new WeatherServiceException("No forecast available for the specified date");
             }
 
-            throw new WeatherServiceException("No forecast available for the specified date");
+            return extractWeatherData(root);
         } catch (RestClientException e) {
-            throw new WeatherServiceException("Failed to fetch forecast: " + e.getMessage(), e);
+            throw new WeatherServiceException("Failed to fetch weather: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new WeatherServiceException("Error processing forecast data: " + e.getMessage(), e);
+            throw new WeatherServiceException("Error processing weather data: " + e.getMessage(), e);
         }
     }
 
+    // Extracts relevant weather information from the API response
+    // Creates a WeatherData object with icon, temperature, and description
     private WeatherData extractWeatherData(JsonNode weatherNode) {
         try {
-            String icon = weatherNode.path("weather").get(0).path("icon").asText();
-            double temp = weatherNode.path("main").path("temp").asDouble();
-            String description = weatherNode.path("weather").get(0).path("description").asText();
-
-            return new WeatherData(icon, String.format("%.1f°F", temp), description);
+            JsonNode weather = weatherNode.path("weather").get(0);
+            return new WeatherData(
+                    weather.path("icon").asText(),
+                    String.format("%.1f°F", weatherNode.path("main").path("temp").asDouble()),
+                    weather.path("description").asText()
+            );
         } catch (Exception e) {
             throw new WeatherServiceException("Error extracting weather data from API response: " + e.getMessage(), e);
         }
+    }
+
+    // Enriches a list of events with weather data
+    // Handles missing venues and weather data errors gracefully
+    public List<UpcomingEventDTO> enrichEventsWithWeather(List<Event> events) {
+        return events.stream()
+                .map(event -> {
+                    WeatherData weatherData = Optional.ofNullable(event.getVenue())
+                            .map(venue -> {
+                                try {
+                                    return getWeatherData(venue.getLocation(), event.getDate());
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            })
+                            .orElse(null);
+                    return new UpcomingEventDTO(event, weatherData);
+                })
+                .collect(Collectors.toList());
     }
 }

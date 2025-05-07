@@ -4,7 +4,6 @@ import com.eventvista.event_vista.data.EventRepository;
 import com.eventvista.event_vista.model.Event;
 import com.eventvista.event_vista.model.User;
 import com.eventvista.event_vista.model.dto.UpcomingEventDTO;
-import com.eventvista.event_vista.model.dto.WeatherData;
 import com.eventvista.event_vista.exception.EventNotFoundException;
 import com.eventvista.event_vista.exception.InvalidEventDataException;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -83,6 +81,8 @@ public class EventService {
 // Throws InvalidEventDataException if the event data is invalid
     @Transactional
     public Event addEvent(Event event, User user) {
+        // Not a rebooking operation,
+        // Will not validate that the event date/time is in the future
         validateEventData(event, false);
 
         // Set the user
@@ -245,27 +245,25 @@ public class EventService {
         // Sort events by date and time
         events.sort(this::compareEventsByDateTime);
 
-        // Convert to DTOs with weather data
-        return events.stream()
-                .map(event -> {
-                    WeatherData weatherData = null;
-                    try {
-                        weatherData = weatherService.getWeatherData(
-                                event.getVenue() != null ? event.getVenue().getLocation() : null,
-                                event.getDate()
-                        );
-                    } catch (Exception e) {
-                        // Silently handle weather data errors
-                    }
-                    return new UpcomingEventDTO(event, weatherData);
-                })
-                .collect(Collectors.toList());
+        // Use WeatherService to enrich events with weather data
+        return weatherService.enrichEventsWithWeather(events);
     }
 
 
     // Retrieves all events for a specific date range
     // Returns list of events within the date range, may be empty if no events exist
     public List<Event> findEventsByDateRange(LocalDate startDate, LocalDate endDate, User user) {
+        // Validate date parameters
+        if (startDate == null || endDate == null) {
+            throw new InvalidEventDataException("Start date and end date cannot be null");
+        }
+
+        // Calendar-specific validation
+        if (startDate.isAfter(endDate)) {
+            throw new InvalidEventDataException("Start date cannot be after end date");
+        }
+
+        // Get events from repository - repository methods already include user validation
         return eventRepository.findByDateBetweenAndUser(startDate, endDate, user);
     }
 
