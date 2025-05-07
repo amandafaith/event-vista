@@ -221,6 +221,7 @@ public class EventService {
         return eventRepository.save(newEvent);
     }
 
+    //sorts events chronologically by date and time
     private int compareEventsByDateTime(Event e1, Event e2) {
         // First compare dates
         int dateComparison = e1.getDate().compareTo(e2.getDate());
