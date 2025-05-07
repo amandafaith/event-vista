@@ -30,23 +30,27 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
 
     List<Event> findByVendorsIdAndUser(Integer vendorId, User user);
 
+    // Checks if the event belongs to the specified user
+    // Checks if the event is upcoming:
+    // if event is on a future date or
+    // if event is today but at a future time
     @Query("SELECT e FROM Event e WHERE e.user = :user AND (e.date > :currentDate OR (e.date = :currentDate AND e.time > :currentTime))")
     List<Event> findUpcomingEvents(@Param("user") User user,
                                    @Param("currentDate") LocalDate currentDate,
                                    @Param("currentTime") LocalTime currentTime);
 
-    List<Event> findByUserAndDateGreaterThanEqualOrderByDateAsc(User user, LocalDate date);
-
-    default List<Event> findUpcomingEventsByUser(User user) {
-        return findByUserAndDateGreaterThanEqualOrderByDateAsc(user, LocalDate.now());
-    }
-
-    @Query("SELECT e FROM Event e WHERE e.date >= :currentDate ORDER BY e.date ASC")
-    List<Event> findUpcomingEvents(@Param("currentDate") LocalDate currentDate);
-
-    default List<Event> findUpcomingEvents() {
-        return findUpcomingEvents(LocalDate.now());
-    }
+//    List<Event> findByUserAndDateGreaterThanEqualOrderByDateAsc(User user, LocalDate date);
+//
+//    default List<Event> findUpcomingEventsByUser(User user) {
+//        return findByUserAndDateGreaterThanEqualOrderByDateAsc(user, LocalDate.now());
+//    }
+//
+//    @Query("SELECT e FROM Event e WHERE e.date >= :currentDate ORDER BY e.date ASC")
+//    List<Event> findUpcomingEvents(@Param("currentDate") LocalDate currentDate);
+//
+//    default List<Event> findUpcomingEvents() {
+//        return findUpcomingEvents(LocalDate.now());
+//    }
 
 }
 
