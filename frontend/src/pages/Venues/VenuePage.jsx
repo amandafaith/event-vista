@@ -15,7 +15,8 @@ const VenuePage = () => {
   const [showVenueForm, setShowVenueForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAuthenticated, token, logout } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Search state
@@ -24,12 +25,12 @@ const VenuePage = () => {
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!user) {
       navigate("/login");
       return;
     }
     fetchVenues();
-  }, [isAuthenticated, token, navigate]);
+  }, [user, navigate]);
 
   const handleAuthError = async () => {
     await logout();
@@ -62,6 +63,7 @@ const VenuePage = () => {
     }
 
     try {
+      setLoading(true);
       let result;
       console.log("Searching for:", searchTerm, "by type:", searchType);
 
@@ -96,14 +98,22 @@ const VenuePage = () => {
       console.log("Final search results:", searchResults);
 
       setSearchResults(searchResults.filter((item) => item !== null));
+      setError(null);
     } catch (err) {
       console.error("Error searching venues:", err);
-      setSearchResults([]);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        await handleAuthError();
+      } else {
+        setError("Error searching venues. Please try again.");
+        setSearchResults([]);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddVenue = () => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -112,7 +122,7 @@ const VenuePage = () => {
   };
 
   const handleEditVenue = (venue) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -121,13 +131,14 @@ const VenuePage = () => {
   };
 
   const handleDeleteVenue = async (venueId) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
 
     if (window.confirm("Are you sure you want to delete this venue?")) {
       try {
+        setIsSubmitting(true);
         await venueApi.deleteVenue(venueId);
         setVenues(venues.filter((venue) => venue.id !== venueId));
         setSearchResults(searchResults.filter((venue) => venue.id !== venueId));
@@ -139,17 +150,20 @@ const VenuePage = () => {
         } else {
           setError("Failed to delete venue. Please try again later.");
         }
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
 
   const handleVenueSubmit = async (venueData) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
 
     try {
+      setIsSubmitting(true);
       if (selectedVenue) {
         // Update existing venue
         const response = await venueApi.updateVenue(
@@ -184,6 +198,8 @@ const VenuePage = () => {
         // Rethrow the error so VenueForm can handle and display it
         throw err;
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -193,7 +209,7 @@ const VenuePage = () => {
     setSearchResults(venues);
   };
 
-  if (!isAuthenticated || !token) {
+  if (!user) {
     return null; // Will redirect in useEffect
   }
 
@@ -221,13 +237,22 @@ const VenuePage = () => {
             searchType={searchType}
             setSearchType={setSearchType}
             onSearch={handleSearch}
+            disabled={isSubmitting}
           />
 
           <div className={styles.actionButtons}>
-            <button className={styles.viewAllButton} onClick={handleViewAll}>
+            <button
+              className={styles.viewAllButton}
+              onClick={handleViewAll}
+              disabled={isSubmitting}
+            >
               View All
             </button>
-            <button className={styles.addButton} onClick={handleAddVenue}>
+            <button
+              className={styles.addButton}
+              onClick={handleAddVenue}
+              disabled={isSubmitting}
+            >
               Add New Venue
             </button>
           </div>
@@ -244,6 +269,7 @@ const VenuePage = () => {
           venues={searchResults}
           onEdit={handleEditVenue}
           onDelete={handleDeleteVenue}
+          disabled={isSubmitting}
         />
 
         {showVenueForm && (

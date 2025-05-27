@@ -15,7 +15,7 @@ const VendorPage = () => {
   const [showVendorForm, setShowVendorForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAuthenticated, token, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Search state
@@ -24,12 +24,12 @@ const VendorPage = () => {
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!user) {
       navigate("/login");
       return;
     }
     fetchVendors();
-  }, [isAuthenticated, token, navigate]);
+  }, [user, navigate]);
 
   const handleAuthError = async () => {
     await logout();
@@ -106,7 +106,7 @@ const VendorPage = () => {
   };
 
   const handleAddVendor = () => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -115,7 +115,7 @@ const VendorPage = () => {
   };
 
   const handleEditVendor = (vendor) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -139,7 +139,7 @@ const VendorPage = () => {
   };
 
   const handleDeleteVendor = async (vendorId) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -164,7 +164,7 @@ const VendorPage = () => {
   };
 
   const handleVendorSubmit = async (vendorData) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -205,7 +205,7 @@ const VendorPage = () => {
         response = await vendorApi.updateVendor(
           selectedVendor.id,
           payload,
-          token
+          user
         );
         normalizedVendor = normalizeVendor(response.data);
 
@@ -221,7 +221,7 @@ const VendorPage = () => {
         );
       } else {
         // Create new vendor
-        response = await vendorApi.createVendor(payload, token);
+        response = await vendorApi.createVendor(payload, user);
         normalizedVendor = normalizeVendor(response.data);
 
         setVendors([...vendors, normalizedVendor]);
@@ -249,7 +249,7 @@ const VendorPage = () => {
     setSearchResults(vendors);
   };
 
-  if (!isAuthenticated || !token) {
+  if (!user) {
     return null; // Will redirect in useEffect
   }
 

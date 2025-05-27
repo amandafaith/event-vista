@@ -10,20 +10,40 @@ const Login = () => {
     password: "",
   });
   const [error, setError] = useState("");
-  const { login, user } = useAuth();
+  const [info, setInfo] = useState("");
+  const { login, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get return URL from query params
   const searchParams = new URLSearchParams(location.search);
   const returnUrl = searchParams.get("returnUrl") || "/dashboard";
 
+  // Check for verification message from registration
+  useEffect(() => {
+    if (location.state?.message) {
+      setInfo(location.state.message);
+    }
+  }, [location]);
+
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate(returnUrl);
+    console.log("Login component - Auth state:", { user, loading });
+    if (!loading && user) {
+      console.log("User is authenticated, redirecting to:", returnUrl);
+      navigate(returnUrl, { replace: true });
     }
-  }, [user, navigate, returnUrl]);
+  }, [user, loading, navigate, returnUrl]);
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,13 +56,21 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsSubmitting(true);
+    console.log("Login form submitted");
 
     try {
+      console.log("Attempting login...");
       await login(credentials);
-      navigate(returnUrl);
+      console.log("Login successful, redirecting to:", returnUrl);
+      navigate(returnUrl, { replace: true });
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.message || "Failed to login. Please try again.");
+      setError(
+        error.response?.data?.message || "Login failed. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,12 +128,14 @@ const Login = () => {
             </div>
 
             {error && <div className="error-message">{error}</div>}
+            {info && <div className="info-message">{info}</div>}
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="submit-button button button-primary"
             >
-              Sign in
+              {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
 
             <div className="forgot-password">

@@ -2,7 +2,12 @@ import React from "react";
 import "../../styles/components.css";
 import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
 
-const VenueSearchResults = ({ venues = [], onEdit, onDelete }) => {
+const VenueSearchResults = ({
+  venues = [],
+  onEdit,
+  onDelete,
+  disabled = false,
+}) => {
   const venuesArray = Array.isArray(venues) ? venues : [];
 
   if (venuesArray.length === 0) {
@@ -24,6 +29,7 @@ const VenueSearchResults = ({ venues = [], onEdit, onDelete }) => {
                 key={`edit-${venue.id}`}
                 className="button button-outline"
                 onClick={() => onEdit(venue)}
+                disabled={disabled}
               >
                 Edit
               </button>
@@ -31,6 +37,7 @@ const VenueSearchResults = ({ venues = [], onEdit, onDelete }) => {
                 key={`delete-${venue.id}`}
                 className="button button-secondary"
                 onClick={() => onDelete(venue.id)}
+                disabled={disabled}
               >
                 Delete
               </button>
@@ -50,6 +57,7 @@ const VenueSearchResults = ({ venues = [], onEdit, onDelete }) => {
                 }
                 onChange={() => {}}
                 displayMode={true}
+                disabled={disabled}
               />
             </p>
             {venue.notes && <p key={`notes-${venue.id}`}>📝 {venue.notes}</p>}

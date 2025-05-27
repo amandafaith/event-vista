@@ -10,6 +10,9 @@ import com.eventvista.event_vista.model.dto.UserProfileDTO;
 import com.eventvista.event_vista.security.JwtTokenProvider;
 import com.eventvista.event_vista.service.EmailService;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +57,18 @@ public class JwtAuthenticationController {
 
     @Value("${app.email.verification.token.expiration}")
     private long verificationTokenExpiration;
+
+    @Value("${jwt.cookie.name}")
+    private String jwtCookieName;
+
+    @Value("${jwt.cookie.secure}")
+    private boolean jwtCookieSecure;
+
+    @Value("${jwt.cookie.http-only}")
+    private boolean jwtCookieHttpOnly;
+
+    @Value("${jwt.cookie.same-site}")
+    private String jwtCookieSameSite;
 
     @GetMapping("/all")
     public List<User> getAllUsers() {
@@ -104,84 +119,120 @@ public class JwtAuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> processLoginForm(@RequestBody @Valid LoginFormDTO loginFormDTO) {
+    public ResponseEntity<?> processLoginForm(@RequestBody @Valid LoginFormDTO loginFormDTO, HttpServletResponse response) {
         System.out.println("=== LOGIN ATTEMPT START ===");
         System.out.println("Login attempt for email: " + loginFormDTO.getEmailAddress());
-        System.out.println("Password provided: " + (loginFormDTO.getPassword() != null ? "Yes" : "No"));
 
         try {
-            // First check if user exists
-            System.out.println("Checking if user exists in database...");
             Optional<User> userOptional = userRepository.findByEmailAddress(loginFormDTO.getEmailAddress());
             if (userOptional.isEmpty()) {
-                System.out.println("User not found with email: " + loginFormDTO.getEmailAddress());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("message", "Invalid credentials"));
             }
 
             User user = userOptional.get();
-            System.out.println("Found user: " + user.getEmailAddress());
-            System.out.println("Stored password hash: " + user.getPasswordHash());
-            System.out.println("User verification status: " + user.isEmailVerified());
 
-            // Check if email is verified
             if (!user.isEmailVerified()) {
-                System.out.println("Email not verified for user: " + user.getEmailAddress());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please verify your email before logging in");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Please verify your email before logging in"));
             }
 
-            // Verify password
             if (!user.isMatchingPassword(loginFormDTO.getPassword())) {
-                System.out.println("Password does not match for user: " + user.getEmailAddress());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Invalid credentials"));
             }
 
-            // Try to authenticate
-            System.out.println("Attempting authentication with AuthenticationManager...");
-            try {
-                // Authenticate user
-                Authentication authentication = authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                loginFormDTO.getEmailAddress(),
-                                loginFormDTO.getPassword()
-                        )
-                );
-                System.out.println("Authentication successful!");
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginFormDTO.getEmailAddress(),
+                            loginFormDTO.getPassword()
+                    )
+            );
 
-                // Set authentication in the context
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                // Generate JWT token
-                String jwt = tokenProvider.generateToken(authentication);
-                System.out.println("JWT token generated successfully");
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("token", jwt);
-                response.put("user", user);
-                response.put("message", "Login successful");
+            // Generate both access and refresh tokens
+            String accessToken = tokenProvider.generateAccessToken(authentication);
+            String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
-                System.out.println("=== LOGIN ATTEMPT SUCCESS ===");
-                return ResponseEntity.ok(response);
-            } catch (Exception authEx) {
-                System.out.println("Authentication failed in AuthenticationManager: " + authEx.getMessage());
-                throw authEx;
-            }
+            // Create access token cookie
+            Cookie accessTokenCookie = new Cookie(jwtCookieName, accessToken);
+            accessTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+            accessTokenCookie.setSecure(jwtCookieSecure);
+            accessTokenCookie.setPath("/");
+            accessTokenCookie.setMaxAge(900); // 15 minutes in seconds
+            response.addCookie(accessTokenCookie);
+
+            // Create refresh token cookie
+            Cookie refreshTokenCookie = new Cookie(jwtCookieName + "_refresh", refreshToken);
+            refreshTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+            refreshTokenCookie.setSecure(jwtCookieSecure);
+            refreshTokenCookie.setPath("/api/auth/refresh");
+            refreshTokenCookie.setMaxAge(604800); // 7 days in seconds
+            response.addCookie(refreshTokenCookie);
+
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("user", user);
+            responseBody.put("message", "Login successful");
+
+            return ResponseEntity.ok(responseBody);
         } catch (Exception e) {
             System.err.println("=== LOGIN ATTEMPT FAILED ===");
             System.err.println("Authentication failed: " + e.getMessage());
-            e.printStackTrace();
-
-            String errorMessage = e.getMessage();
-            if (errorMessage != null && errorMessage.contains("Bad credentials")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("message", "Invalid email or password"));
-            }
-
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Login failed. Please try again."));
+                    .body(Map.of("message", "Invalid credentials"));
         }
     }
 
-    //Confirms the user’s token is valid and not expired.
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletResponse response) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "No authentication found"));
+            }
+
+            // Generate new access token
+            String newAccessToken = tokenProvider.generateAccessToken(authentication);
+
+            // Create new access token cookie
+            Cookie accessTokenCookie = new Cookie(jwtCookieName, newAccessToken);
+            accessTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+            accessTokenCookie.setSecure(jwtCookieSecure);
+            accessTokenCookie.setPath("/");
+            accessTokenCookie.setMaxAge(900); // 15 minutes in seconds
+            response.addCookie(accessTokenCookie);
+
+            return ResponseEntity.ok(Map.of("message", "Token refreshed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Failed to refresh token"));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        // Clear access token cookie
+        Cookie accessTokenCookie = new Cookie(jwtCookieName, null);
+        accessTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+        accessTokenCookie.setSecure(jwtCookieSecure);
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(0);
+        response.addCookie(accessTokenCookie);
+
+        // Clear refresh token cookie
+        Cookie refreshTokenCookie = new Cookie(jwtCookieName + "_refresh", null);
+        refreshTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+        refreshTokenCookie.setSecure(jwtCookieSecure);
+        refreshTokenCookie.setPath("/api/auth/refresh");
+        refreshTokenCookie.setMaxAge(0);
+        response.addCookie(refreshTokenCookie);
+
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    //Confirms the user's token is valid and not expired.
     @GetMapping("/verify")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         System.out.println("Received verification request with token: " + token);
@@ -228,7 +279,7 @@ public class JwtAuthenticationController {
         return ResponseEntity.ok(Map.of("message", "Email verified successfully! You can now log in."));
     }
 
-    //Generating a new verification token and sending it to the user’s email address.
+    //Generating a new verification token and sending it to the user's email address.
     @PostMapping("/resend-verification")
     public ResponseEntity<?> resendVerification(@RequestParam String emailAddress) {
         Optional<User> userOptional = userRepository.findByEmailAddress(emailAddress);
@@ -263,32 +314,34 @@ public class JwtAuthenticationController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
-        // Check if token is present and starts with "Bearer ". Validation
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-            if (tokenProvider.validateToken(token)) {
-                String emailAddress = tokenProvider.getUsernameFromToken(token);
-                Optional<User> userOptional = userRepository.findByEmailAddress(emailAddress);
-                if (userOptional.isPresent()) {
-                    //return ResponseEntity.ok(userOptional.get()); returns user data if token is valid.
-                    User user = userOptional.get();
-                    UserProfileDTO dto = new UserProfileDTO();
-                    dto.setId(user.getId());
-                    dto.setName(user.getName());
-                    dto.setEmailAddress(user.getEmailAddress());
-                    dto.setPictureUrl(user.getPictureUrl());
-                    return ResponseEntity.ok(dto); // ✅ This sends only the needed data
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        try {
+            // Get token from cookie
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (jwtCookieName.equals(cookie.getName())) {
+                        String token = cookie.getValue();
+                        if (tokenProvider.validateToken(token)) {
+                            String emailAddress = tokenProvider.getUsernameFromToken(token);
+                            Optional<User> userOptional = userRepository.findByEmailAddress(emailAddress);
+                            if (userOptional.isPresent()) {
+                                User user = userOptional.get();
+                                UserProfileDTO dto = new UserProfileDTO();
+                                dto.setId(user.getId());
+                                dto.setName(user.getName());
+                                dto.setEmailAddress(user.getEmailAddress());
+                                dto.setPictureUrl(user.getPictureUrl());
+                                return ResponseEntity.ok(dto);
+                            }
+                        }
+                    }
                 }
             }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No valid token found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok("Successfully logged out");
     }
 
     @PostMapping("/reset-password")
@@ -337,44 +390,63 @@ public class JwtAuthenticationController {
     // Update user profile
     @PutMapping("/update-profile")
     public ResponseEntity<?> updateUserProfileJwt(@RequestBody UserProfileDTO profileDTO,
-                                                  @RequestHeader("Authorization") String token) {
-        // Check if token is present and starts with "Bearer ". Validation
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-            if (tokenProvider.validateToken(token)) {
-                String email = tokenProvider.getUsernameFromToken(token);
-                try {
-                    //Updates user profile info using UserService
-                    User updatedUser = userService.updateUserProfile(email, profileDTO);
-                    return ResponseEntity.ok(new UserProfileDTO(
-                            updatedUser.getId(),
-                            updatedUser.getName(),
-                            updatedUser.getEmailAddress(),
-                            updatedUser.getPictureUrl()
-                    ));
-                } catch (RuntimeException ex) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+                                                  HttpServletRequest request) {
+        try {
+            // Get token from cookie
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (jwtCookieName.equals(cookie.getName())) {
+                        String token = cookie.getValue();
+                        if (tokenProvider.validateToken(token)) {
+                            String email = tokenProvider.getUsernameFromToken(token);
+                            try {
+                                //Updates user profile info using UserService
+                                User updatedUser = userService.updateUserProfile(email, profileDTO);
+                                return ResponseEntity.ok(new UserProfileDTO(
+                                        updatedUser.getId(),
+                                        updatedUser.getName(),
+                                        updatedUser.getEmailAddress(),
+                                        updatedUser.getPictureUrl()
+                                ));
+                            } catch (RuntimeException ex) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+                            }
+                        }
+                    }
                 }
             }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No valid token found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
         }
-        return ResponseEntity.status(401).body("Invalid or expired token");
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<?> deleteUser(@RequestHeader("Authorization") String token) {
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-            if (tokenProvider.validateToken(token)) {
-                String email = tokenProvider.getUsernameFromToken(token);
-                Optional<User> userOpt = userRepository.findByEmailAddress(email);
-                if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-                    userRepository.delete(user);
-                    return ResponseEntity.ok("User deleted successfully");
+    public ResponseEntity<?> deleteUser(HttpServletRequest request) {
+        try {
+            // Get token from cookie
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (jwtCookieName.equals(cookie.getName())) {
+                        String token = cookie.getValue();
+                        if (tokenProvider.validateToken(token)) {
+                            String email = tokenProvider.getUsernameFromToken(token);
+                            Optional<User> userOpt = userRepository.findByEmailAddress(email);
+                            if (userOpt.isPresent()) {
+                                User user = userOpt.get();
+                                userRepository.delete(user);
+                                return ResponseEntity.ok("User deleted successfully");
+                            }
+                        }
+                    }
                 }
             }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No valid token found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
         }
-        return ResponseEntity.status(401).body("Invalid or expired token");
     }
 
 

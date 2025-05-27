@@ -4,6 +4,7 @@ import com.eventvista.event_vista.model.User;
 import com.eventvista.event_vista.model.AuthProvider;
 import com.eventvista.event_vista.service.UserService;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,18 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     //Injects the frontend redirect URI application properties.
     @Value("${app.oauth2.authorizedRedirectUris}")
     private String authorizedRedirectUri;
+
+    @Value("${jwt.cookie.name}")
+    private String jwtCookieName;
+
+    @Value("${jwt.cookie.secure}")
+    private boolean jwtCookieSecure;
+
+    @Value("${jwt.cookie.http-only}")
+    private boolean jwtCookieHttpOnly;
+
+    @Value("${jwt.cookie.same-site}")
+    private String jwtCookieSameSite;
 
     @Autowired
     private JwtTokenProvider tokenProvider;
@@ -72,12 +85,28 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             // Save user to the database
             user = userService.save(user);
 
-            // Generate JWT token
-            String token = tokenProvider.generateToken(authentication);
+            // Generate access and refresh tokens
+            String accessToken = tokenProvider.generateAccessToken(authentication);
+            String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
-            // Redirect to frontend with token
+            // Create access token cookie
+            Cookie accessTokenCookie = new Cookie(jwtCookieName, accessToken);
+            accessTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+            accessTokenCookie.setSecure(jwtCookieSecure);
+            accessTokenCookie.setPath("/");
+            accessTokenCookie.setMaxAge(900); // 15 minutes in seconds
+            response.addCookie(accessTokenCookie);
+
+            // Create refresh token cookie
+            Cookie refreshTokenCookie = new Cookie(jwtCookieName + "_refresh", refreshToken);
+            refreshTokenCookie.setHttpOnly(jwtCookieHttpOnly);
+            refreshTokenCookie.setSecure(jwtCookieSecure);
+            refreshTokenCookie.setPath("/api/auth/refresh");
+            refreshTokenCookie.setMaxAge(604800); // 7 days in seconds
+            response.addCookie(refreshTokenCookie);
+
+            // Redirect to frontend with user info
             String redirectUrl = UriComponentsBuilder.fromUriString(authorizedRedirectUri)
-                    .queryParam("token", token)
                     .queryParam("userId", user.getId())
                     .build().toUriString();
 

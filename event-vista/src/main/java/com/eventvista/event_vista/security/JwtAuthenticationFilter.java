@@ -3,9 +3,11 @@ package com.eventvista.event_vista.security;
 import com.eventvista.event_vista.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 
 // This filter checks for the presence of a JWT token in the request header
 @Component
@@ -26,59 +30,77 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Value("${jwt.cookie.name}")
+    private String jwtCookieName;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            // Extracting the JWT token from the request header
-            String jwt = getJwtFromRequest(request);
-            // If the token is present, validate it and set the authentication in the context
             String requestUri = request.getRequestURI();
 
-            System.out.println("Processing request to: " + requestUri);
-            System.out.println("Authorization header present: " + (request.getHeader("Authorization") != null));
+            // Skip token validation for public endpoints
+            if (isPublicEndpoint(requestUri)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-            //Using JwtTokenProvider to validate the token and extract the username (email).
-            if (jwt != null) {
-                System.out.println("JWT token found, validating...");
-                if (tokenProvider.validateToken(jwt)) {
+            String jwt = getJwtFromRequest(request);
+            if (jwt != null && tokenProvider.validateToken(jwt)) {
+                String tokenType = tokenProvider.getTokenType(jwt);
+
+                if ("access".equals(tokenType)) {
                     String username = tokenProvider.getUsernameFromToken(jwt);
-                    System.out.println("Token valid for user: " + username);
-
-                    // Loading the user details from the database using the email (username) found in the token.
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    System.out.println("Authentication successful");
                 } else {
-                    System.out.println("Token validation failed");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid token type");
                     return;
                 }
-            } else {
-                System.out.println("No JWT token found in request");
             }
         } catch (Exception ex) {
-            System.err.println("Could not set user authentication: " + ex.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Authentication failed: " + ex.getMessage());
             return;
         }
 
-        //If the token is valid, the request is allowed to proceed to the controller.
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicEndpoint(String requestUri) {
+        return requestUri.equals("/api/auth/refresh") ||
+                requestUri.equals("/api/auth/login") ||
+                requestUri.equals("/api/auth/register") ||
+                requestUri.equals("/api/auth/verify") ||
+                requestUri.equals("/api/auth/resend-verification") ||
+                requestUri.equals("/api/auth/reset-password") ||
+                requestUri.equals("/api/auth/user") ||
+                requestUri.equals("/api/auth/logout") ||
+                requestUri.startsWith("/oauth2/") ||
+                requestUri.startsWith("/login/oauth2/") ||
+                requestUri.startsWith("/api/public/");
     }
 
     // Extracting the JWT token from the request header
     //If the header starts with "Bearer ", it extracts the JWT string.
     private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        // First try to get token from cookie
+        if (request.getCookies() != null) {
+            Optional<Cookie> jwtCookie = Arrays.stream(request.getCookies())
+                    .filter(cookie -> jwtCookieName.equals(cookie.getName()))
+                    .findFirst();
+
+            if (jwtCookie.isPresent()) {
+                return jwtCookie.get().getValue();
+            }
         }
+
         return null;
     }
 }

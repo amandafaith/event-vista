@@ -6,47 +6,67 @@ export const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
+    let mounted = true;
+
     const checkAuth = async () => {
-      if (token) {
-        try {
-          const response = await authApi.getCurrentUser();
-          setUser(response.data);
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          localStorage.removeItem("token");
-          setToken(null);
+      if (initialized) return;
+
+      console.log("Starting authentication check...");
+      try {
+        const response = await authApi.getCurrentUser();
+        console.log("Auth check response status:", response.status);
+        console.log("Auth check response data:", response.data);
+
+        if (mounted) {
+          if (response.data && response.data.id) {
+            console.log("Valid user data found, setting user");
+            setUser(response.data);
+          } else {
+            console.log("No valid user data, setting user to null");
+            setUser(null);
+          }
+          setLoading(false);
+          setInitialized(true);
+        }
+      } catch (error) {
+        console.log("Auth check error:", error);
+        if (mounted) {
           setUser(null);
+          setLoading(false);
+          setInitialized(true);
         }
       }
-      setLoading(false);
     };
 
     checkAuth();
-  }, [token]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [initialized]);
 
   const login = async (credentials) => {
+    console.log("Login attempt with credentials:", credentials.emailAddress);
+    setLoading(true);
     try {
       const response = await authApi.login(credentials);
-      const { token: newToken, user: userData } = response.data;
-
-      if (newToken) {
-        localStorage.setItem("token", newToken);
-        setToken(newToken);
-        setUser(userData);
+      console.log("Login response:", response);
+      if (response.data && response.data.user) {
+        console.log("Login successful, setting user");
+        setUser(response.data.user);
+        setLoading(false);
         return true;
       } else {
-        throw new Error("No token received from server");
+        console.log("Invalid login response format");
+        throw new Error("Invalid response format from server");
       }
     } catch (error) {
       console.error("Login error:", error);
-      // Clear any existing tokens on login failure
-      localStorage.removeItem("token");
-      setToken(null);
       setUser(null);
+      setLoading(false);
       throw error;
     }
   };
@@ -58,7 +78,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       const response = await authApi.register(formData);
-      return response.data.message;
+      // Store verification state in localStorage
+      localStorage.setItem("verificationPending", "true");
+      return response.data;
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -66,14 +88,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    console.log("Logout attempt");
+    setLoading(true);
     try {
       await authApi.logout();
+      console.log("Logout successful");
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      localStorage.removeItem("token");
-      setToken(null);
+      console.log("Setting user to null after logout");
       setUser(null);
+      setLoading(false);
+      setInitialized(false);
     }
   };
 
@@ -84,15 +110,17 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    token,
     isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  console.log("AuthContext state:", {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    initialized,
+  });
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

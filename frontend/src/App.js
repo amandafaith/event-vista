@@ -18,11 +18,11 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading-container">Loading...</div>;
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -56,9 +56,30 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/venues" element={<VenuePage />} />
-          <Route path="/vendors" element={<VendorPage />} />
-          <Route path="/clients" element={<ClientPage />} />
+          <Route
+            path="/venues"
+            element={
+              <ProtectedRoute>
+                <VenuePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vendors"
+            element={
+              <ProtectedRoute>
+                <VendorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute>
+                <ClientPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </AuthProvider>

@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "../../components/common/Navigation/Navigation";
 
 const Dashboard = () => {
-  const { user, logout, token } = useAuth();
+  const { user, logout } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,6 +17,19 @@ const Dashboard = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [eventUpdateCount, setEventUpdateCount] = useState(0);
   const navigate = useNavigate();
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await eventApi.getAllEvents();
+      setEvents(response.data);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (successMessage) {
@@ -39,23 +52,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (token) {
+    if (user) {
       fetchEvents();
     }
-  }, [token]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const response = await eventApi.getAllEvents();
-      setEvents(response.data);
-    } catch (err) {
-      console.error("Error fetching events:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user]);
 
   const handleAddEvent = () => {
     setShowEventForm(true);
@@ -84,7 +84,7 @@ const Dashboard = () => {
     setEventUpdateCount((prev) => prev + 1);
   };
 
-  if (loading) {
+  if (!user) {
     return (
       <div className="loading-container">
         <div className="loading-spinner">Loading...</div>
@@ -92,15 +92,37 @@ const Dashboard = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="dashboard-layout">
+        <Navigation />
+        <div className="dashboard-container">
+          <div className="dashboard-content">
+            <div className="loading-container">
+              <div className="loading-spinner">Loading events...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error-message">
-          <h3>Error Loading Events</h3>
-          <p>{error}</p>
-          <button onClick={fetchEvents} className="button button-primary">
-            Try Again
-          </button>
+      <div className="dashboard-layout">
+        <Navigation />
+        <div className="dashboard-container">
+          <div className="dashboard-content">
+            <div className="error-container">
+              <div className="error-message">
+                <h3>Error Loading Events</h3>
+                <p>{error}</p>
+                <button onClick={fetchEvents} className="button button-primary">
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

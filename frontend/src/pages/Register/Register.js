@@ -35,17 +35,26 @@ const Register = () => {
     }
 
     try {
-      await register(formData);
+      const response = await register(formData);
       setSuccess(
-        "Registration successful! Please check your email to verify your account."
+        "Registration successful! Please check your email to verify your account. You will be redirected to the login page."
       );
       // Don't navigate away immediately so the user can see the success message
       setTimeout(() => {
-        navigate("/login");
+        navigate("/login", {
+          state: {
+            message:
+              "Please check your email to verify your account before logging in.",
+          },
+        });
       }, 3000);
     } catch (error) {
       console.error("Registration error:", error);
-      setError(error.message || "Registration failed. Please try again.");
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          "Registration failed. Please try again."
+      );
     }
   };
 
@@ -62,7 +71,6 @@ const Register = () => {
                 sign in to your account
               </Link>
             </p>
-
           </div>
           <form className="register-form" onSubmit={handleSubmit}>
             <div className="form-group">

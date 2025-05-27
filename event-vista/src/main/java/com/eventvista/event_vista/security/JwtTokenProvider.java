@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtTokenProvider {
@@ -17,16 +19,26 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration}")
-    private int jwtExpirationInMs;
+    @Value("${jwt.access-token.expiration}")
+    private int accessTokenExpirationInMs;
+
+    @Value("${jwt.refresh-token.expiration}")
+    private int refreshTokenExpirationInMs;
 
     // creating a signing key for JWT token. Ensures that the token cannot be forged without the secret key.
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(Authentication authentication) {
+    public String generateAccessToken(Authentication authentication) {
+        return generateToken(authentication, accessTokenExpirationInMs, "access");
+    }
 
+    public String generateRefreshToken(Authentication authentication) {
+        return generateToken(authentication, refreshTokenExpirationInMs, "refresh");
+    }
+
+    private String generateToken(Authentication authentication, long expirationInMs, String tokenType) {
         // Get the authenticated principal (the user who just logged in)
         // This could be either an OAuth2User (Google login) or a UserDetails (email/password login)
         Object principal = authentication.getPrincipal();
@@ -51,12 +63,17 @@ public class JwtTokenProvider {
 
         //Setting the issue time and expiration time for the token.
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+        Date expiryDate = new Date(now.getTime() + expirationInMs);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", tokenType);
+        claims.put("email", email);
 
         // Creating the JWT token using the builder pattern
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(email)
-                .setIssuedAt(new Date())
+                .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
@@ -72,6 +89,16 @@ public class JwtTokenProvider {
                 .getBody();
 
         return claims.getSubject();
+    }
+
+    public String getTokenType(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("type", String.class);
     }
 
     // Validating the JWT token
@@ -94,6 +121,20 @@ public class JwtTokenProvider {
             System.err.println("JWT claims string is empty");
         }
         return false;
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
     }
 }
 

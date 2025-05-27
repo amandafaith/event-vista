@@ -15,7 +15,7 @@ const ClientPage = () => {
   const [showClientForm, setShowClientForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isAuthenticated, token, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Search state
@@ -24,12 +24,12 @@ const ClientPage = () => {
   const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!user) {
       navigate("/login");
       return;
     }
     fetchClients();
-  }, [isAuthenticated, token, navigate]);
+  }, [user, navigate]);
 
   const handleAuthError = async () => {
     await logout();
@@ -92,7 +92,7 @@ const ClientPage = () => {
   };
 
   const handleAddClient = () => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -101,7 +101,7 @@ const ClientPage = () => {
   };
 
   const handleEditClient = (client) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -110,7 +110,7 @@ const ClientPage = () => {
   };
 
   const handleDeleteClient = async (clientId) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -135,7 +135,7 @@ const ClientPage = () => {
   };
 
   const handleClientSubmit = async (clientData) => {
-    if (!token) {
+    if (!user) {
       handleAuthError();
       return;
     }
@@ -182,7 +182,7 @@ const ClientPage = () => {
     setSearchResults(clients);
   };
 
-  if (!isAuthenticated || !token) {
+  if (!user) {
     return null; // Will redirect in useEffect
   }
 

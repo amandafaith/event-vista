@@ -4,6 +4,7 @@ import "../../styles/components.css";
 import styles from "./VenueForm.module.css";
 import { useNavigate } from "react-router-dom";
 import PhoneNumberInput from "../../components/common/PhoneNumberInput/PhoneNumberInput";
+import { useAuth } from "../../context/AuthContext";
 
 const VenueForm = ({ initialData, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -28,6 +29,15 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   const validatePhoneNumber = (phoneNumber) => {
     // Match the backend validation pattern
@@ -84,17 +94,37 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     if (validateForm()) {
       try {
+        setIsSubmitting(true);
         // Transform the data to match the backend format
         const venueData = {
           ...formData,
           phoneNumber: formData.phoneNumber.phoneNumber,
         };
         console.log("Submitting venue data:", venueData);
-        await onSubmit(venueData); // await and catch
+        await onSubmit(venueData);
       } catch (error) {
         console.error("Error saving venue:", error);
+
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate("/login");
+          return;
+        }
+
+        // Handle network/CORS errors
+        if (error.message === "Network Error" || !error.response) {
+          setErrors({
+            submit:
+              "Unable to connect to the server. Please check your connection and try again.",
+          });
+          return;
+        }
 
         const serverError = error?.response?.data?.error;
 
@@ -115,8 +145,12 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
           setErrors(fieldErrors);
         } else {
           // Fallback generic error
-          setErrors({ submit: "Failed to save venue. Please try again." });
+          setErrors({
+            submit: "Failed to save venue. Please try again later.",
+          });
         }
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -140,6 +174,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
             onChange={handleChange}
             className={`form-input ${errors.name ? "error" : ""}`}
             required
+            disabled={isSubmitting}
           />
           {errors.name && <div className="error-text">{errors.name}</div>}
         </div>
@@ -153,6 +188,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
             onChange={handleChange}
             className={`form-input ${errors.location ? "error" : ""}`}
             required
+            disabled={isSubmitting}
           />
           {errors.location && (
             <div className="error-text">{errors.location}</div>
@@ -168,6 +204,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
             onChange={handleChange}
             className={`form-input ${errors.emailAddress ? "error" : ""}`}
             required
+            disabled={isSubmitting}
           />
           {errors.emailAddress && (
             <div className="error-text">{errors.emailAddress}</div>
@@ -181,6 +218,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
           onChange={handleChange}
           error={errors.phoneNumber}
           required
+          disabled={isSubmitting}
         />
 
         <div className="form-group">
@@ -193,6 +231,7 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
             className={`form-input ${errors.capacity ? "error" : ""}`}
             min="1"
             required
+            disabled={isSubmitting}
           />
           {errors.capacity && (
             <div className="error-text">{errors.capacity}</div>
@@ -207,19 +246,29 @@ const VenueForm = ({ initialData, onSubmit, onCancel }) => {
             onChange={handleChange}
             className="form-input"
             rows="4"
+            disabled={isSubmitting}
           />
         </div>
 
         {errors.submit && <div className="error-message">{errors.submit}</div>}
 
         <div className="flex" style={{ gap: "1rem", marginTop: "2rem" }}>
-          <button type="submit" className="button button-primary">
-            {initialData ? "Update Venue" : "Create Venue"}
+          <button
+            type="submit"
+            className="button button-primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? "Saving..."
+              : initialData
+              ? "Update Venue"
+              : "Create Venue"}
           </button>
           <button
             type="button"
             onClick={onCancel}
             className="button button-secondary"
+            disabled={isSubmitting}
           >
             Cancel
           </button>
